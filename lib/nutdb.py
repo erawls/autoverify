@@ -1,25 +1,30 @@
 from urllib.request import urlopen
+
 import requests
+
 try:
 	import ujson as json
 except:
 	import json
-import Hex
-from binascii import hexlify as hx, unhexlify as uhx
-import pykakasi
-import os
-import Print
-from tqdm import tqdm
-import time
-import csv
-import chardet
-from googletrans import Translator
+
 import ast
-from difflib import SequenceMatcher
+import csv
+import os
 import re
+import time
+from binascii import hexlify as hx
+from binascii import unhexlify as uhx
+from datetime import date
+from difflib import SequenceMatcher
+
+import chardet
 # import listmanager
 import DBmodule as dbmodule
-from datetime import date
+import Hex
+import Print
+import pykakasi
+from googletrans import Translator
+from tqdm import tqdm
 
 # SET ENVIRONMENT
 squirrel_dir=os.path.abspath(os.curdir)
@@ -27,36 +32,36 @@ NSCB_dir=os.path.abspath('../'+(os.curdir))
 
 if os.path.exists(os.path.join(squirrel_dir,'ztools')):
 	NSCB_dir=squirrel_dir
-	zconfig_dir=os.path.join(NSCB_dir, 'zconfig')	  
+	zconfig_dir=os.path.join(NSCB_dir, 'zconfig')
 	ztools_dir=os.path.join(NSCB_dir,'ztools')
 	squirrel_dir=ztools_dir
 elif os.path.exists(os.path.join(NSCB_dir,'ztools')):
 	squirrel_dir=squirrel_dir
 	ztools_dir=os.path.join(NSCB_dir, 'ztools')
 	zconfig_dir=os.path.join(NSCB_dir, 'zconfig')
-else:	
+else:
 	ztools_dir=os.path.join(NSCB_dir, 'ztools')
 	zconfig_dir=os.path.join(NSCB_dir, 'zconfig')
 
 def get_titlesurl(tfile):
 	with open(tfile,'rt',encoding='utf8') as csvfile:
-		readCSV = csv.reader(csvfile, delimiter='|')	
-		i=0	
+		readCSV = csv.reader(csvfile, delimiter='|')
+		i=0
 		for row in readCSV:
 			if i==0:
 				csvheader=row
 				i=1
 				if 'URL' in csvheader:
-					weburl=csvheader.index('URL')	
-				else:break	
-			else:	
+					weburl=csvheader.index('URL')
+				else:break
+			else:
 				url=str(row[weburl])
-				return url	
-				
+				return url
+
 def get_otherurl(tfile,dbname):
 	with open(tfile,'rt',encoding='utf8') as csvfile:
-		readCSV = csv.reader(csvfile, delimiter='|')	
-		i=0	
+		readCSV = csv.reader(csvfile, delimiter='|')
+		i=0
 		for row in readCSV:
 			if i==0:
 				csvheader=row
@@ -64,7 +69,7 @@ def get_otherurl(tfile,dbname):
 				if 'URL' and 'NAME' in csvheader:
 					weburl=csvheader.index('URL')
 					name=csvheader.index('NAME')
-				else:break	
+				else:break
 			else:
 				if dbname.lower() == str(row[name]).lower():
 					url=str(row[weburl])
@@ -72,90 +77,90 @@ def get_otherurl(tfile,dbname):
 
 if os.path.exists(zconfig_dir):
 	DATABASE_folder=os.path.join(zconfig_dir, 'DB')
-	nutdbfile=os.path.join(DATABASE_folder,'nutdb.json')	
+	nutdbfile=os.path.join(DATABASE_folder,'nutdb.json')
 	urlconfig=os.path.join(zconfig_dir,'NUT_DB_URL.txt')
 	urlregions=os.path.join(zconfig_dir,'NUT_DB_REGIONS_URL.txt')
 	urlconfig_mirror=os.path.join(zconfig_dir,'NUT_DB_URL_mirror.txt')
-	urlregions_mirror=os.path.join(zconfig_dir,'NUT_DB_REGIONS_URL_mirror.txt')		
+	urlregions_mirror=os.path.join(zconfig_dir,'NUT_DB_REGIONS_URL_mirror.txt')
 	if os.path.exists(urlconfig):
-		json_url = get_titlesurl(urlconfig)	
-		json_url_mirror = get_titlesurl(urlconfig_mirror)	
+		json_url = get_titlesurl(urlconfig)
+		json_url_mirror = get_titlesurl(urlconfig_mirror)
 	else:
 		urlconfig=os.path.join(squirrel_dir,'NUT_DB_URL.txt')
-		urlregions=os.path.join(squirrel_dir,'NUT_DB_REGIONS_URL.txt')	
+		urlregions=os.path.join(squirrel_dir,'NUT_DB_REGIONS_URL.txt')
 		urlconfig_mirror=os.path.join(squirrel_dir,'NUT_DB_URL_mirror.txt')
-		urlregions_mirror=os.path.join(squirrel_dir,'NUT_DB_REGIONS_URL_mirror.txt')			
+		urlregions_mirror=os.path.join(squirrel_dir,'NUT_DB_REGIONS_URL_mirror.txt')
 		DATABASE_folder=squirrel_dir
 		try:
-			if os.path.exists(urlconfig):	
-				json_url = get_titlesurl(urlconfig)		
-				json_url_mirror = get_titlesurl(urlconfig_mirror)	
-			else:	
+			if os.path.exists(urlconfig):
+				json_url = get_titlesurl(urlconfig)
+				json_url_mirror = get_titlesurl(urlconfig_mirror)
+			else:
 				json_url='http://tinfoil.media/repo/db/titles.US.en.json'
-				json_url_mirror='https://raw.githubusercontent.com/julesontheroad/titledb/master/titles.US.en.json'				
+				json_url_mirror='https://raw.githubusercontent.com/julesontheroad/titledb/master/titles.US.en.json'
 		except:
-			if os.path.exists(urlconfig_mirror):	
-				json_url = get_titlesurl(urlconfig_mirror)		
-			else:	
-				json_url='https://raw.githubusercontent.com/julesontheroad/titledb/master/titles.US.en.json'			
+			if os.path.exists(urlconfig_mirror):
+				json_url = get_titlesurl(urlconfig_mirror)
+			else:
+				json_url='https://raw.githubusercontent.com/julesontheroad/titledb/master/titles.US.en.json'
 else:
 	nutdbfile='nutdb.json'
 	urlconfig=os.path.join(squirrel_dir,'NUT_DB_URL.txt')
 	urlregions=os.path.join(squirrel_dir,'NUT_DB_REGIONS_URL.txt')
 	urlconfig_mirror=os.path.join(squirrel_dir,'NUT_DB_URL_mirror.txt')
-	urlregions_mirror=os.path.join(squirrel_dir,'NUT_DB_REGIONS_URL_mirror.txt')		
-	DATABASE_folder=squirrel_dir	
+	urlregions_mirror=os.path.join(squirrel_dir,'NUT_DB_REGIONS_URL_mirror.txt')
+	DATABASE_folder=squirrel_dir
 	try:
-		if os.path.exists(urlconfig):	
-			json_url = get_titlesurl(urlconfig)		
-		else:	
+		if os.path.exists(urlconfig):
+			json_url = get_titlesurl(urlconfig)
+		else:
 			json_url='http://tinfoil.media/repo/db/titles.US.en.json'
 	except:
-		if os.path.exists(urlconfig_mirror):	
-			json_url = get_titlesurl(urlconfig_mirror)		
-		else:	
+		if os.path.exists(urlconfig_mirror):
+			json_url = get_titlesurl(urlconfig_mirror)
+		else:
 			json_url='https://raw.githubusercontent.com/julesontheroad/titledb/master/titles.US.en.json'
-			
+
 if not os.path.exists(DATABASE_folder):
-	os.makedirs(DATABASE_folder)	
-	
-apivjson=os.path.join(DATABASE_folder,'apiv.json')	
+	os.makedirs(DATABASE_folder)
+
+apivjson=os.path.join(DATABASE_folder,'apiv.json')
 
 def get_apivjson():
 	try:
 		response = requests.get('http://tinfoil.io/Api/patches/get', stream=True)
 	except BaseException as e:
-		Print.error('Exception: ' + str(e))		
+		Print.error('Exception: ' + str(e))
 	if '<Response [404]>'!=str(response):
-		tempfile=apivjson[:-4]+'2.json'		
+		tempfile=apivjson[:-4]+'2.json'
 		try:
 			with open(tempfile,'wb') as nutfile:
 				print('Getting apiv json')
 				for data in response:
 					nutfile.write(data)
 					if not data:
-						break	
-			with open(tempfile) as json_file:					
-				data = json.load(json_file)	
-			app_json = json.dumps(data, indent=4)		
+						break
+			with open(tempfile) as json_file:
+				data = json.load(json_file)
+			app_json = json.dumps(data, indent=4)
 			with open(apivjson, 'w') as json_file:
-			  json_file.write(app_json)			
+			  json_file.write(app_json)
 			try:os.remove(tempfile)
-			except:pass	
+			except:pass
 		except BaseException as e:
-			Print.error('Exception: ' + str(e))	
-			pass			
+			Print.error('Exception: ' + str(e))
+			pass
 
 def get_DBfolder():
 	return DATABASE_folder
-	
+
 def getnutdb():
 	try:
 		response = requests.get(json_url, stream=True)
 	except BaseException as e:
-		Print.error('Exception: ' + str(e))	
+		Print.error('Exception: ' + str(e))
 	if '<Response [404]>'!=str(response):
-		tempfile=nutdbfile[:-4]+'2.json'		
+		tempfile=nutdbfile[:-4]+'2.json'
 		try:
 			with open(tempfile,'wb') as nutfile:
 				print('Getting NUTDB json')
@@ -163,18 +168,18 @@ def getnutdb():
 					nutfile.write(data)
 					if not data:
 						break
-			with open(tempfile) as json_file:					
-				data = json.load(json_file)	
-			app_json = json.dumps(data, indent=4)		
+			with open(tempfile) as json_file:
+				data = json.load(json_file)
+			app_json = json.dumps(data, indent=4)
 			with open(nutdbfile, 'w') as json_file:
-			  json_file.write(app_json)			
+			  json_file.write(app_json)
 			try:os.remove(tempfile)
-			except:pass	
+			except:pass
 		except:
 			try:
 				response = requests.get(json_url_mirror, stream=True)
 			except BaseException as e:
-				Print.error('Exception: ' + str(e))					
+				Print.error('Exception: ' + str(e))
 			if '<Response [404]>'!=str(response):
 				tempfile=nutdbfile[:-4]+'2.json'
 				try:
@@ -184,34 +189,34 @@ def getnutdb():
 							nutfile.write(data)
 							if not data:
 								break
-					with open(tempfile) as json_file:					
-						data = json.load(json_file)				
-					app_json = json.dumps(data, indent=4)		
+					with open(tempfile) as json_file:
+						data = json.load(json_file)
+					app_json = json.dumps(data, indent=4)
 					with open(nutdbfile, 'w') as json_file:
-					  json_file.write(app_json)			
+					  json_file.write(app_json)
 					try:os.remove(tempfile)
 					except:pass
-					return True	
+					return True
 				except BaseException as e:
-					Print.error('Exception: ' + str(e))		
+					Print.error('Exception: ' + str(e))
 					try:os.remove(tempfile)
-					except:pass	
-					os.utime(nutdbfile,(time.time(),time.time()))	
+					except:pass
+					os.utime(nutdbfile,(time.time(),time.time()))
 					print('DB origin is corrupt. Old Files were preserved.')
 					print('The program will retry in the next refresh cicle')
 					return False
 			else:
 				print(json_url)
 				print("Response 404. Old Files weren't removed")
-				os.utime(nutdbfile,(time.time(),time.time()))			
-				return False	
+				os.utime(nutdbfile,(time.time(),time.time()))
+				return False
 	else:
 		try:
 			response = requests.get(json_url_mirror, stream=True)
 		except BaseException as e:
-			Print.error('Exception: ' + str(e))	
+			Print.error('Exception: ' + str(e))
 		if '<Response [404]>'!=str(response):
-			tempfile=nutdbfile[:-4]+'2.json'			
+			tempfile=nutdbfile[:-4]+'2.json'
 			try:
 				with open(tempfile,'wb') as nutfile:
 					print('Error in nutdb origin -> Getting NUTDB json using mirror')
@@ -219,41 +224,41 @@ def getnutdb():
 						nutfile.write(data)
 						if not data:
 							break
-				with open(tempfile) as json_file:					
-					data = json.load(json_file)				
-				app_json = json.dumps(data, indent=4)		
+				with open(tempfile) as json_file:
+					data = json.load(json_file)
+				app_json = json.dumps(data, indent=4)
 				with open(nutdbfile, 'w') as json_file:
-				  json_file.write(app_json)			
+				  json_file.write(app_json)
 				try:os.remove(tempfile)
 				except:pass
 				return False
 			except BaseException as e:
-				Print.error('Exception: ' + str(e))		
+				Print.error('Exception: ' + str(e))
 				try:os.remove(tempfile)
-				except:pass	
-				os.utime(nutdbfile,(time.time(),time.time()))	
+				except:pass
+				os.utime(nutdbfile,(time.time(),time.time()))
 				print('DB origin is corrupt. Old Files were preserved.')
 				print('The program will retry in the next refresh cicle')
-				return True			
+				return True
 		else:
 			print(json_url)
 			print("Response 404. Old Files weren't removed")
-			os.utime(nutdbfile,(time.time(),time.time()))			
-			return False			
+			os.utime(nutdbfile,(time.time(),time.time()))
+			return False
 
-def regionurl(region):	
+def regionurl(region):
 	with open(urlregions,'rt',encoding='utf8') as csvfile:
-		readCSV = csv.reader(csvfile, delimiter='|')	
-		i=0	
+		readCSV = csv.reader(csvfile, delimiter='|')
+		i=0
 		for row in readCSV:
 			if i==0:
 				csvheader=row
 				i=1
 				if 'REGION' and 'URL' in csvheader:
 					reg=csvheader.index('REGION')
-					weburl=csvheader.index('URL')	
-				else:break	
-			else:	
+					weburl=csvheader.index('URL')
+				else:break
+			else:
 				if str(region).lower()==str(row[reg]).lower():
 					url=str(row[weburl])
 					break
@@ -265,43 +270,43 @@ def regionurl(region):
 		return url
 	else:
 		with open(urlregions_mirror,'rt',encoding='utf8') as csvfile:
-			readCSV = csv.reader(csvfile, delimiter='|')	
-			i=0	
+			readCSV = csv.reader(csvfile, delimiter='|')
+			i=0
 			for row in readCSV:
 				if i==0:
 					csvheader=row
 					i=1
 					if 'REGION' and 'URL' in csvheader:
 						reg=csvheader.index('REGION')
-						weburl=csvheader.index('URL')	
-					else:break	
-				else:	
+						weburl=csvheader.index('URL')
+					else:break
+				else:
 					if str(region).lower()==str(row[reg]).lower():
 						url=str(row[weburl])
-						return url	
-					
-def region_refresh_time(region):	
+						return url
+
+def region_refresh_time(region):
 	th=24;tm=0;ts=0
 	with open(urlregions,'rt',encoding='utf8') as csvfile:
-		readCSV = csv.reader(csvfile, delimiter='|')	
-		i=0	
+		readCSV = csv.reader(csvfile, delimiter='|')
+		i=0
 		for row in readCSV:
 			if i==0:
 				csvheader=row
 				i=1
 				if 'REGION'in csvheader:
 					reg=csvheader.index('REGION')
-				else:break	
+				else:break
 				if 'REFRESH(h)'in csvheader:
 					indexh=csvheader.index('REFRESH(h)')
-				else:break		
+				else:break
 				if 'REFRESH(m)'in csvheader:
 					indexm=csvheader.index('REFRESH(m)')
-				else:break	
+				else:break
 				if 'REFRESH(s)'in csvheader:
 					indexs=csvheader.index('REFRESH(s)')
-				else:break								
-			else:	
+				else:break
+			else:
 				if str(region).lower()==str(row[reg]).lower():
 					try:
 						th=int(str(row[indexh]))
@@ -311,32 +316,32 @@ def region_refresh_time(region):
 					except:	pass
 					try:
 						ts=int(str(row[indexs]))
-					except:	pass		
+					except:	pass
 					break
-	return th,tm,ts		
-	
-def others_refresh_time(tfile,dbname):	
+	return th,tm,ts
+
+def others_refresh_time(tfile,dbname):
 	th=24;tm=0;ts=0
 	with open(tfile,'rt',encoding='utf8') as csvfile:
-		readCSV = csv.reader(csvfile, delimiter='|')	
-		i=0	
+		readCSV = csv.reader(csvfile, delimiter='|')
+		i=0
 		for row in readCSV:
 			if i==0:
 				csvheader=row
 				i=1
 				if 'NAME'in csvheader:
 					name=csvheader.index('NAME')
-				else:break	
+				else:break
 				if 'REFRESH(h)'in csvheader:
 					indexh=csvheader.index('REFRESH(h)')
-				else:break		
+				else:break
 				if 'REFRESH(m)'in csvheader:
 					indexm=csvheader.index('REFRESH(m)')
-				else:break	
+				else:break
 				if 'REFRESH(s)'in csvheader:
 					indexs=csvheader.index('REFRESH(s)')
-				else:break								
-			else:	
+				else:break
+			else:
 				if str(dbname).lower()==str(row[name]).lower():
 					try:
 						th=int(str(row[indexh]))
@@ -346,29 +351,29 @@ def others_refresh_time(tfile,dbname):
 					except:	pass
 					try:
 						ts=int(str(row[indexs]))
-					except:	pass		
+					except:	pass
 					break
-	return th,tm,ts		
+	return th,tm,ts
 
-def titles_refresh_time():	
+def titles_refresh_time():
 	th=24;tm=0;ts=0
 	with open(urlconfig,'rt',encoding='utf8') as csvfile:
-		readCSV = csv.reader(csvfile, delimiter='|')	
-		i=0	
+		readCSV = csv.reader(csvfile, delimiter='|')
+		i=0
 		for row in readCSV:
 			if i==0:
 				csvheader=row
 				i=1
 				if 'REFRESH(h)'in csvheader:
 					indexh=csvheader.index('REFRESH(h)')
-				else:break		
+				else:break
 				if 'REFRESH(m)'in csvheader:
 					indexm=csvheader.index('REFRESH(m)')
-				else:break	
+				else:break
 				if 'REFRESH(s)'in csvheader:
 					indexs=csvheader.index('REFRESH(s)')
-				else:break								
-			else:	
+				else:break
+			else:
 				try:
 					th=int(str(row[indexh]))
 				except:	pass
@@ -377,31 +382,31 @@ def titles_refresh_time():
 				except:	pass
 				try:
 					ts=int(str(row[indexs]))
-				except:	pass		
+				except:	pass
 				break
-	return th,tm,ts			
-					
-def check_region_file(region,nutdb=True):	
+	return th,tm,ts
+
+def check_region_file(region,nutdb=True):
 	try:
 		th,tm,ts=region_refresh_time(region)
 	except:
 		th=24;tm=0;ts=0
 	f='nutdb_'+region+'.json'
 	if nutdb==False:
-		f=region+'.json'		
-	regionfile=os.path.join(DATABASE_folder,f)		
+		f=region+'.json'
+	regionfile=os.path.join(DATABASE_folder,f)
 	if not os.path.exists(regionfile):
 		try:
 			get_regionDB(region)
-			return True		
+			return True
 		except:
 			return False
 	elif (th*60*60+tm*60+ts)>=(9999*60*60):
-		return True			
+		return True
 	elif (time.time() - os.path.getmtime(regionfile)) > (th*60*60+tm*60+ts):
 		try:
-			get_regionDB(region)	
-			return True	
+			get_regionDB(region)
+			return True
 		except:
 			return False
 	else:
@@ -411,18 +416,18 @@ def check_region_file(region,nutdb=True):
 				return 'Refresh time limit not reached'
 		except:
 			try:
-				get_regionDB(region)	
+				get_regionDB(region)
 				return True
 			except:
 				return False
-	return	False							
-			
-def check_other_file(dbfile,dbname,nutdb=True):	
+	return	False
+
+def check_other_file(dbfile,dbname,nutdb=True):
 	if str(dbname.lower()).endswith('_txt'):
 		ext='.txt'
 		enderf=dbname[:-4]
 	else:
-		ext='.json'	
+		ext='.json'
 		enderf=dbname
 	try:
 		th,tm,ts=others_refresh_time(dbfile,dbname)
@@ -431,7 +436,7 @@ def check_other_file(dbfile,dbname,nutdb=True):
 	f='nutdb_'+enderf+ext
 	if nutdb==False:
 		f=enderf+ext
-	_dbfile_=os.path.join(DATABASE_folder,f)		
+	_dbfile_=os.path.join(DATABASE_folder,f)
 	if not os.path.exists(_dbfile_):
 		try:
 			get_otherDB(dbfile,dbname,f)
@@ -439,11 +444,11 @@ def check_other_file(dbfile,dbname,nutdb=True):
 		except:
 			return False
 	elif (th*60*60+tm*60+ts)>=(9999*60*60):
-		return True						
+		return True
 	elif (time.time() - os.path.getmtime(_dbfile_)) > (th*60*60+tm*60+ts):
 		try:
-			get_otherDB(dbfile,dbname,f)	
-			return True	
+			get_otherDB(dbfile,dbname,f)
+			return True
 		except:
 			return False
 	else:
@@ -470,10 +475,10 @@ def get_otherDB(dbfile,dbname,f,URL=None):
 		response = requests.get(url, stream=True)
 	except BaseException as e:
 		Print.error('Exception: ' + str(e))
-	if '<Response [404]>'!=str(response):	
+	if '<Response [404]>'!=str(response):
 		if os.path.exists(_dbfile_):
 			try:os.remove(_dbfile_)
-			except:pass		
+			except:pass
 		try:
 			with open(_dbfile_,'wb') as nutfile:
 				print('Getting NUTDB json "'+dbname+'"')
@@ -482,14 +487,14 @@ def get_otherDB(dbfile,dbname,f,URL=None):
 					if not data:
 						break
 		except BaseException as e:
-			Print.error('Exception: ' + str(e))		
+			Print.error('Exception: ' + str(e))
 			try:os.remove(_dbfile_)
-			except:pass	
-		if 	dbname=='versions_txt' and URL==None:	
+			except:pass
+		if 	dbname=='versions_txt' and URL==None:
 			check_ver_not_missing(_dbfile_)
 		if dbname=='HC_VLIST':
 			format_hac_versionlist()
-		return True				
+		return True
 	else:
 		dbfile_mirror=dbfile[:-4]+'_mirror.txt'
 		url=get_otherurl(dbfile_mirror,dbname)
@@ -499,10 +504,10 @@ def get_otherDB(dbfile,dbname,f,URL=None):
 			response = requests.get(url, stream=True)
 		except BaseException as e:
 			Print.error('Exception: ' + str(e))
-		if '<Response [404]>'!=str(response):	
+		if '<Response [404]>'!=str(response):
 			if os.path.exists(_dbfile_):
 				try:os.remove(_dbfile_)
-				except:pass		
+				except:pass
 			try:
 				with open(_dbfile_,'wb') as nutfile:
 					print('Getting NUTDB json "'+dbname+'"')
@@ -511,90 +516,90 @@ def get_otherDB(dbfile,dbname,f,URL=None):
 						if not data:
 							break
 			except BaseException as e:
-				Print.error('Exception: ' + str(e))		
+				Print.error('Exception: ' + str(e))
 				try:os.remove(_dbfile_)
-				except:pass	
-			if 	dbname=='versions_txt' and URL==None:	
-				check_ver_not_missing(_dbfile_)				
-			return True			
-		else:	
+				except:pass
+			if 	dbname=='versions_txt' and URL==None:
+				check_ver_not_missing(_dbfile_)
+			return True
+		else:
 			URL=None
 			if 	dbname=='versions_txt' and URL==None:
-				check_ver_not_missing(_dbfile_,force=True)	
-			else:	
+				check_ver_not_missing(_dbfile_,force=True)
+			else:
 				print(dbname)
-				print("Response 404. Old Files weren't removed")	
-				return False	
+				print("Response 404. Old Files weren't removed")
+				return False
 
 def check_ver_not_missing(_dbfile_,force=False):
 	if force==True:
-		get_otherDB(urlconfig,'versions_txt','nutdb_versions.txt',URL='http://tinfoil.media/repo/db/versions.txt')	
-		get_otherDB(urlconfig,'versions','nutdb_versions.json')			
+		get_otherDB(urlconfig,'versions_txt','nutdb_versions.txt',URL='http://tinfoil.media/repo/db/versions.txt')
+		get_otherDB(urlconfig,'versions','nutdb_versions.json')
 		return
-	try:	
+	try:
 		with open(_dbfile_,'rt',encoding='utf8') as csvfile:
-			readCSV = csv.reader(csvfile, delimiter='|')	
-			i=0	
+			readCSV = csv.reader(csvfile, delimiter='|')
+			i=0
 			for row in readCSV:
 				if i==0:
 					csvheader=row
 					i=1
 					if 'id' and 'version' in csvheader:
 						id=csvheader.index('id')
-						ver=csvheader.index('version')	
-				else:	
+						ver=csvheader.index('version')
+				else:
 					try:
-						tid=str(row[id]).upper() 
+						tid=str(row[id]).upper()
 						v_=str(row[ver])
 						if v_=='':
 							print("Version numbers missing falling back to tinfoil media")
 							get_otherDB(urlconfig,'versions_txt','nutdb_versions.txt',URL='http://tinfoil.media/repo/db/versions.txt')
-							get_otherDB(urlconfig,'versions','nutdb_versions.json')								
+							get_otherDB(urlconfig,'versions','nutdb_versions.json')
 					except:
 						get_otherDB(urlconfig,'versions_txt','nutdb_versions.txt',URL='http://tinfoil.media/repo/db/versions.txt')
 						get_otherDB(urlconfig,'versions','nutdb_versions.json',URL='http://tinfoil.media/repo/db/versions.json')
-					break	
+					break
 	except:
-		get_otherDB(urlconfig,'versions_txt','nutdb_versions.txt',URL='http://tinfoil.media/repo/db/versions.txt')	
-		get_otherDB(urlconfig,'versions','nutdb_versions.json')			
+		get_otherDB(urlconfig,'versions_txt','nutdb_versions.txt',URL='http://tinfoil.media/repo/db/versions.txt')
+		get_otherDB(urlconfig,'versions','nutdb_versions.json')
 	consolidate_versiondb()
 
 def consolidate_versiondb():
 	ver_txt=os.path.join(DATABASE_folder, 'nutdb_versions.txt')
 	ver_JSON=os.path.join(DATABASE_folder, 'nutdb_versions.json')
-	titles_JSON=os.path.join(DATABASE_folder, 'nutdb.json')	
+	titles_JSON=os.path.join(DATABASE_folder, 'nutdb.json')
 	hcvfile=os.path.join(DATABASE_folder,'HC_VLIST.json')
 	ver_txt_dict={};data={}
-	if os.path.exists(ver_txt):	
+	if os.path.exists(ver_txt):
 		with open(ver_txt,'rt',encoding='utf8') as csvfile:
-			readCSV = csv.reader(csvfile, delimiter='|')	
-			i=0			
+			readCSV = csv.reader(csvfile, delimiter='|')
+			i=0
 			for row in readCSV:
 				if i==0:
 					csvheader=row
 					i=1
 					if 'id' and 'version' in csvheader:
 						id=csvheader.index('id')
-						ver=csvheader.index('version')	
-					else:break	
-				else:	
-					tid=str(row[id]).upper() 
+						ver=csvheader.index('version')
+					else:break
+				else:
+					tid=str(row[id]).upper()
 					v_=str(row[ver])
 					if v_=="" and tid.endswith('800'):
 						continue
 						# v_=65536
 					elif v_=="":
-						v_=0					
+						v_=0
 					if tid.endswith('800'):
-						tid=tid[:-3]+'000'					
+						tid=tid[:-3]+'000'
 					if not tid in ver_txt_dict:
-						ver_txt_dict[tid]=v_			
+						ver_txt_dict[tid]=v_
 					else:
 						if int(v_)>int(ver_txt_dict[tid]):
 							ver_txt_dict[tid]=v_
-	if os.path.exists(ver_JSON):	
-		with open(ver_JSON, 'r') as json_file:	
-			data = json.load(json_file)	
+	if os.path.exists(ver_JSON):
+		with open(ver_JSON, 'r') as json_file:
+			data = json.load(json_file)
 			for i in data:
 				c=0;tid=str(i).upper()
 				if tid.endswith('800'):
@@ -604,7 +609,7 @@ def consolidate_versiondb():
 						continue
 						# j=65536
 					elif j=="":
-						j=0							
+						j=0
 					try:
 						if not tid in ver_txt_dict:
 							ver_txt_dict[tid]=j
@@ -613,14 +618,14 @@ def consolidate_versiondb():
 								ver_txt_dict[tid]=j
 					except BaseException as e:
 						Print.error('Exception: ' + str(e))
-	if os.path.exists(titles_JSON):	
-		with open(titles_JSON, 'r') as json_file:	
-			data2 = json.load(json_file)	
+	if os.path.exists(titles_JSON):
+		with open(titles_JSON, 'r') as json_file:
+			data2 = json.load(json_file)
 			for i in data2:
 				c=0;tid=str(i).upper()
 				if tid.endswith('800'):
 					tid=tid[:-3]+'000'
-				entry=data2[i]	
+				entry=data2[i]
 				if i.endswith('800'):
 					try:
 						j=entry['version']
@@ -631,7 +636,7 @@ def consolidate_versiondb():
 					try:
 						j=entry['version']
 					except:
-						j=0	
+						j=0
 				try:
 					if j is None:
 						continue
@@ -641,15 +646,15 @@ def consolidate_versiondb():
 						if int(j)>int(ver_txt_dict[tid]):
 							ver_txt_dict[tid]=j
 				except BaseException as e:
-					Print.error('Exception: ' + str(e))		
-	if os.path.exists(hcvfile):	
-		with open(hcvfile, 'r') as json_file:	
-			data3 = json.load(json_file)	
+					Print.error('Exception: ' + str(e))
+	if os.path.exists(hcvfile):
+		with open(hcvfile, 'r') as json_file:
+			data3 = json.load(json_file)
 			for i in data3:
 				c=0;tid=str(i).upper()
 				if tid.endswith('800'):
 					tid=tid[:-3]+'000'
-				version=data3[i]	
+				version=data3[i]
 				if i.endswith('800'):
 					try:
 						j=version
@@ -660,7 +665,7 @@ def consolidate_versiondb():
 					try:
 						j=version
 					except:
-						j=0	
+						j=0
 				try:
 					if not tid in ver_txt_dict:
 						ver_txt_dict[tid]=j
@@ -668,9 +673,9 @@ def consolidate_versiondb():
 						if int(j)>int(ver_txt_dict[tid]):
 							ver_txt_dict[tid]=j
 				except BaseException as e:
-					Print.error('Exception: ' + str(e))	
+					Print.error('Exception: ' + str(e))
 	from copy import deepcopy
-	newdict= deepcopy(ver_txt_dict)				
+	newdict= deepcopy(ver_txt_dict)
 	for i in ver_txt_dict:
 		v_=ver_txt_dict[i]
 		if int(v_)<65536:
@@ -679,7 +684,7 @@ def consolidate_versiondb():
 			updid=i[:-3]+'800'
 			if not updid in newdict:
 				newdict[i]='0'
-				newdict[updid]=v_	
+				newdict[updid]=v_
 	ver_txt_dict=newdict
 	for i in data:
 		tid=i.upper()
@@ -688,65 +693,65 @@ def consolidate_versiondb():
 				if not j=="":
 					if int(j)>0 and int(j)<65536:
 						ver_txt_dict[tid]=str(j)
-						
-	with open(ver_txt,'wt',encoding='utf8') as csvfile:			
+
+	with open(ver_txt,'wt',encoding='utf8') as csvfile:
 		csvfile.write('id|version\n')
 		for i in sorted(ver_txt_dict.keys()):
 			if str(i).upper()=='UNKNOWN':
 				continue
 			csvfile.write(f"{i}|{ver_txt_dict[i]}\n")
-			
+
 def return_versiondb():
 	ver_txt=os.path.join(DATABASE_folder, 'nutdb_versions.txt')
 	ver_txt_dict={};data={}
-	if os.path.exists(ver_txt):	
+	if os.path.exists(ver_txt):
 		with open(ver_txt,'rt',encoding='utf8') as csvfile:
-			readCSV = csv.reader(csvfile, delimiter='|')	
-			i=0			
+			readCSV = csv.reader(csvfile, delimiter='|')
+			i=0
 			for row in readCSV:
 				if i==0:
 					csvheader=row
 					i=1
 					if 'id' and 'version' in csvheader:
 						id=csvheader.index('id')
-						ver=csvheader.index('version')	
-					else:break	
-				else:	
-					tid=str(row[id]).upper() 
+						ver=csvheader.index('version')
+					else:break
+				else:
+					tid=str(row[id]).upper()
 					v_=str(row[ver])
 					if v_=="" and tid.endswith('800'):
 						v_=65536
 					elif v_=="":
-						v_=0					
+						v_=0
 					ver_txt_dict[tid]=v_
 	return ver_txt_dict,ver_txt
-	
+
 def get_libs_remote_source(lib):
 	libraries={}
 	libtfile=lib
 	with open(libtfile,'rt',encoding='utf8') as csvfile:
-		readCSV = csv.reader(csvfile, delimiter='|')	
-		i=0;up=False;tdn=False;	
+		readCSV = csv.reader(csvfile, delimiter='|')
+		i=0;up=False;tdn=False;
 		for row in readCSV:
 			if i==0:
 				csvheader=row
 				i=1
 				if 'library_name' and 'path' and 'TD_name' and 'Update' in csvheader:
 					lb=csvheader.index('library_name')
-					pth=csvheader.index('path')	
-					tdn=csvheader.index('TD_name')	
-					up=csvheader.index('Update')	
+					pth=csvheader.index('path')
+					tdn=csvheader.index('TD_name')
+					up=csvheader.index('Update')
 				else:
 					if 'library_name' and 'path' and 'TD_name' in csvheader:
 						lb=csvheader.index('library_name')
 						tdn=csvheader.index('TD_name')
-						pth=csvheader.index('path')				
-					else:break	
-			else:	
+						pth=csvheader.index('path')
+					else:break
+			else:
 				try:
 					update=False
 					library=str(row[lb])
-					route=str(row[pth])		
+					route=str(row[pth])
 					if tdn!=False:
 						try:
 							TD=str(row[tdn])
@@ -754,8 +759,8 @@ def get_libs_remote_source(lib):
 								TD=None
 						except:
 							TD=None
-					else:	
-						TD=None					
+					else:
+						TD=None
 					if up!=False:
 						try:
 							update=str(row[up])
@@ -763,21 +768,21 @@ def get_libs_remote_source(lib):
 								update=True
 							else:
 								update=False
-						except:	
+						except:
 							update=True
 					else:
 						update=False
 					libraries[library]=[route,TD,update]
 				except BaseException as e:
-					Print.error('Exception: ' + str(e))			
+					Print.error('Exception: ' + str(e))
 					pass
 		if not libraries:
 			return False
-	return libraries					
-	
-def update_version_db_from_gd():	
+	return libraries
+
+def update_version_db_from_gd():
 	from workers import concurrent_scrapper
-	remote_lib_file = os.path.join(zconfig_dir, 'remote_libraries.txt')		
+	remote_lib_file = os.path.join(zconfig_dir, 'remote_libraries.txt')
 	ver_txt_dict,ver_txt=return_versiondb()
 	libdict=get_libs_remote_source(remote_lib_file)
 	if libdict==False:
@@ -787,50 +792,50 @@ def update_version_db_from_gd():
 		pths[entry]=((libdict[entry])[0])
 		TDs[entry]=((libdict[entry])[1])
 	# print(pths);print(TDs);
-	print("1. Parsing files from Google Drive. Please Wait...")		
+	print("1. Parsing files from Google Drive. Please Wait...")
 	# print(pths)
 	if isinstance(pths, dict):
 		db={}
 		for i in pths.keys():
-			db[i]={'path':pths[i],'TD_name':TDs[i]}	
+			db[i]={'path':pths[i],'TD_name':TDs[i]}
 		files=concurrent_scrapper(filter='',order='name_ascending',remotelib='all',db=db)
 	else:
 		db={}
-		db[pths]={'path':pths,'TD_name':TDs}			
+		db[pths]={'path':pths,'TD_name':TDs}
 		files=concurrent_scrapper(filter=filter,order='name_ascending',remotelib='all',db=db)
-	remotelist=[]		
+	remotelist=[]
 	for f in files:
 		remotelist.append(f[0])
 	remotelist.reverse()
 	# for f in remotelist:
 		# print(f)
-	remotegames={}		
+	remotegames={}
 	for g in remotelist:
 		entry=listmanager.parsetags(g)
 		entry=list(entry)
-		entry.append(g)		
+		entry.append(g)
 		if not entry[0] in remotegames:
 			remotegames[entry[0]]=entry
 		else:
 			v=(remotegames[entry[0]])[1]
 			if int(entry[1])>int(v):
-				remotegames[entry[0]]=entry		
-	print("2. Consolidating DB...")						
+				remotegames[entry[0]]=entry
+	print("2. Consolidating DB...")
 	for tid in remotegames.keys():
-		if not tid in ver_txt_dict:				
+		if not tid in ver_txt_dict:
 			ver_txt_dict[tid]=int((remotegames[tid])[1])
 		else:
-			# print(tid)		
+			# print(tid)
 			# print((remotegames[tid])[1])
-			# print(ver_txt_dict[tid])			
+			# print(ver_txt_dict[tid])
 			if int((remotegames[tid])[1])>int(ver_txt_dict[tid]):
 				ver_txt_dict[tid]=int((remotegames[tid])[1])
-	with open(ver_txt,'wt',encoding='utf8') as csvfile:			
+	with open(ver_txt,'wt',encoding='utf8') as csvfile:
 		csvfile.write('id|version\n')
 		for i in sorted(ver_txt_dict.keys()):
-			csvfile.write(f"{i}|{ver_txt_dict[i]}\n")	
-	consolidate_versiondb()			
-	
+			csvfile.write(f"{i}|{ver_txt_dict[i]}\n")
+	consolidate_versiondb()
+
 def get_regionDB(region):
 	url=regionurl(region)
 	f='nutdb_'+region+'.json'
@@ -838,9 +843,9 @@ def get_regionDB(region):
 	try:
 		response = requests.get(url, stream=True)
 	except BaseException as e:
-		Print.error('Exception: ' + str(e))			
-	if '<Response [404]>'!=str(response):	
-		tempfile=regionfile[:-4]+'2.json'			
+		Print.error('Exception: ' + str(e))
+	if '<Response [404]>'!=str(response):
+		tempfile=regionfile[:-4]+'2.json'
 		try:
 			with open(tempfile,'wb') as nutfile:
 				print('Getting NUTDB json "'+region+'"')
@@ -848,21 +853,21 @@ def get_regionDB(region):
 					nutfile.write(data)
 					if not data:
 						break
-			with open(tempfile) as json_file:					
-				data = json.load(json_file)					
-			app_json = json.dumps(data, indent=4)		
+			with open(tempfile) as json_file:
+				data = json.load(json_file)
+			app_json = json.dumps(data, indent=4)
 			with open(regionfile, 'w') as json_file:
-			  json_file.write(app_json)				  
+			  json_file.write(app_json)
 			try:os.remove(tempfile)
-			except:pass							
+			except:pass
 		except:
 			url.replace("blawar","julesontheroad")
 			try:
 				response = requests.get(url, stream=True)
 			except BaseException as e:
-				Print.error('Exception: ' + str(e))	
-			if '<Response [404]>'!=str(response):	
-				tempfile=regionfile[:-4]+'2.json'			
+				Print.error('Exception: ' + str(e))
+			if '<Response [404]>'!=str(response):
+				tempfile=regionfile[:-4]+'2.json'
 				try:
 					with open(tempfile,'wb') as nutfile:
 						print('Getting NUTDB json "'+region+'"')
@@ -870,34 +875,34 @@ def get_regionDB(region):
 							nutfile.write(data)
 							if not data:
 								break
-					with open(tempfile) as json_file:					
-						data = json.load(json_file)					
-					app_json = json.dumps(data, indent=4)		
+					with open(tempfile) as json_file:
+						data = json.load(json_file)
+					app_json = json.dumps(data, indent=4)
 					with open(regionfile, 'w') as json_file:
-					  json_file.write(app_json)				  
+					  json_file.write(app_json)
 					try:os.remove(tempfile)
-					except:pass							
+					except:pass
 				except BaseException as e:
-					Print.error('Exception: ' + str(e))		
+					Print.error('Exception: ' + str(e))
 					try:os.remove(tempfile)
-					except:pass	
+					except:pass
 					os.utime(regionfile,(time.time(),time.time()))
 					print('DB origin is corrupt. Old Files were preserved.')
-					print('The program will retry in the next refresh cicle')			
-				return True	
+					print('The program will retry in the next refresh cicle')
+				return True
 	else:
 		print(json_url)
 		print("Response 404. Old Files weren't removed")
 		os.utime(regionfile,(time.time(),time.time()))
-		return False		
+		return False
 
-def format_hac_versionlist():	
+def format_hac_versionlist():
 	try:
 		hcvfile=os.path.join(DATABASE_folder,'HC_VLIST.json')
 		versionlist={}
 		if os.path.exists(hcvfile):
 			with open(hcvfile) as json_file:
-				data = json.load(json_file)	
+				data = json.load(json_file)
 			titles=data['titles']
 			for entry in titles:
 				try:
@@ -905,45 +910,45 @@ def format_hac_versionlist():
 					v=entry['version']
 					versionlist[tid]=v
 				except:pass
-		app_json = json.dumps(versionlist, indent=1)		
+		app_json = json.dumps(versionlist, indent=1)
 		with open(hcvfile, 'w') as json_file:
-		  json_file.write(app_json)		
+		  json_file.write(app_json)
 	except:pass
-	
+
 def force_refresh():
 	try:
 		getnutdb()
-		get_regionDB('America')	
-		get_regionDB('Europe')	
-		get_regionDB('Japan')	
-		get_regionDB('Asia')		
+		get_regionDB('America')
+		get_regionDB('Europe')
+		get_regionDB('Japan')
+		get_regionDB('Asia')
 		get_otherDB(urlconfig,'versions_txt','nutdb_versions.txt')
-		get_otherDB(urlconfig,'versions','nutdb_versions.json')	
-		get_otherDB(urlconfig,'HC_VLIST','HC_VLIST.json')			
-		get_otherDB(urlconfig,'cheats','nutdb_cheats.json')	
+		get_otherDB(urlconfig,'versions','nutdb_versions.json')
+		get_otherDB(urlconfig,'HC_VLIST','HC_VLIST.json')
+		get_otherDB(urlconfig,'cheats','nutdb_cheats.json')
 		get_otherDB(urlconfig,'ninshop','ninshop.json')
-		get_otherDB(urlconfig,'metacritic_id','metacritic_id.json')	
+		get_otherDB(urlconfig,'metacritic_id','metacritic_id.json')
 		get_otherDB(urlconfig,'fw','fw.json')
 		consolidate_versiondb()
 		return True
 	except BaseException as e:
-		Print.error('Exception: ' + str(e))		
+		Print.error('Exception: ' + str(e))
 		return False
-					
-def check_current():	
+
+def check_current():
 	try:
 		th,tm,ts=titles_refresh_time()
 	except:
-		th=24;tm=0;ts=0	
+		th=24;tm=0;ts=0
 	if not os.path.exists(nutdbfile):
 		getnutdb()
-		return True		
+		return True
 	elif (th*60*60+tm*60+ts)>=(9999*60*60):
-		return True					
+		return True
 	elif (time.time() - os.path.getmtime(nutdbfile)) > (th*60*60+tm*60+ts):
 		try:
-			getnutdb()		
-			return True		
+			getnutdb()
+			return True
 		except:
 			return False
 	else:
@@ -953,77 +958,77 @@ def check_current():
 				return 'Refresh time limit not reached'
 		except:
 			try:
-				getnutdb()	
+				getnutdb()
 				return True
 			except:
 				return False
-	return	False	
-	
-def force_update():	
+	return	False
+
+def force_update():
 	try:
 		getnutdb()
 		return True
 	except:
 		return False
-try:	
+try:
 	check_current()
-except:pass	
-	
+except:pass
+
 def get_contentname(titleid,roman=True,format='tabs'):
 	cname=False
-	with open(nutdbfile) as json_file:	
-		data = json.load(json_file)		
+	with open(nutdbfile) as json_file:
+		data = json.load(json_file)
 		titleid=str(titleid).lower()
 		for i in data:
 			check=False
 			for j,k in data[i].items():
 				if str(j) == 'id':
 					if str(k).lower()==titleid:
-						check=True	
+						check=True
 				if str(j) == 'name' and check==True:
 					cname=str(k)
 					break
 		if cname != False and roman == True:
 			converter = kakashi_conv()
-			cname=converter.do(cname)	
+			cname=converter.do(cname)
 			if cname[0] == ' ':
-				basename=basename[1:]			
+				basename=basename[1:]
 			cname=cname[0].upper()+cname[1:]
 			cname=set_roma_uppercases(cname)
-		else:pass						
+		else:pass
 		if cname==False:
 			return False
-	return 	cname		
+	return 	cname
 
 def get_metascores(titleid):
-	titleid=str(titleid).lower()	
+	titleid=str(titleid).lower()
 	if str(titleid).endswith('000'):
 		baseid=titleid[:-3]+'000'
-	elif str(titleid).endswith('800'):	
+	elif str(titleid).endswith('800'):
 		baseid=titleid[:-3]+'000'
 	else:
 		titleid=str(titleid).lower()
 		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()
 	check_other_file(urlconfig,'metacritic_id',nutdb=False)
 	f='metacritic_id.json'
-	metacritic_json=os.path.join(DATABASE_folder,f)	
-	metascore=False;userscore=False;openscore=False	
+	metacritic_json=os.path.join(DATABASE_folder,f)
+	metascore=False;userscore=False;openscore=False
 	try:
-		with open(metacritic_json) as json_file:	
-			data = json.load(json_file)		
+		with open(metacritic_json) as json_file:
+			data = json.load(json_file)
 			for i in data:
 				try:
-					if str(i).lower()==str(baseid).lower() or str(i).lower()==str(titleid).lower():			
+					if str(i).lower()==str(baseid).lower() or str(i).lower()==str(titleid).lower():
 						for j,k in data[i].items():
 							if str(j) == 'metascore':
 								metascore=k
 							if str(j) == 'userscore':
-								userscore=k			
+								userscore=k
 							if str(j) == 'openscore':
-								openscore=k											
+								openscore=k
 						break
-				except:pass			
-	except:pass				
+				except:pass
+	except:pass
 	if metascore==None:
 		metascore=False
 	else:
@@ -1031,32 +1036,32 @@ def get_metascores(titleid):
 	if userscore==None:
 		userscore=False
 	else:
-		userscore=str(userscore)	
+		userscore=str(userscore)
 	if openscore==None:
 		openscore=False
 	else:
-		openscore=str(openscore)		
-	return 	metascore,userscore,openscore			
+		openscore=str(openscore)
+	return 	metascore,userscore,openscore
 
 def get_contenregions(titleid):
-	baseid=get_baseid(titleid);baseid=baseid.lower()	
+	baseid=get_baseid(titleid);baseid=baseid.lower()
 	langue=False
 	rglist=['America','Europe','Japan','Asia']
 	regions=list()
-	titleid=str(titleid).lower()	
+	titleid=str(titleid).lower()
 	if str(titleid).endswith('000'):
 		baseid=titleid
-	elif str(titleid).endswith('800'):	
+	elif str(titleid).endswith('800'):
 		baseid=titleid[:-3]+'000'
 	else:
 		titleid=str(titleid).lower()
-		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()	
+		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()
 	for region in rglist:
 		f='nutdb_'+region+'.json'
-		regionfile=os.path.join(DATABASE_folder,f)	
+		regionfile=os.path.join(DATABASE_folder,f)
 		check_region_file(region)
-		with open(regionfile) as json_file:	
-			data = json.load(json_file)		
+		with open(regionfile) as json_file:
+			data = json.load(json_file)
 			for i in data:
 				dict=data[i]
 				if 'id' in dict and not region in regions:
@@ -1064,59 +1069,59 @@ def get_contenregions(titleid):
 						regions.append(region)
 						break
 	return regions
-	
+
 def get_icon(titleid):
-	baseid=get_baseid(titleid);baseid=baseid.lower()	
+	baseid=get_baseid(titleid);baseid=baseid.lower()
 	iconUrl=False
 	rglist=['America','Europe','Japan','Asia']
 	regions=list()
-	titleid=str(titleid).lower()	
+	titleid=str(titleid).lower()
 	if str(titleid).endswith('000'):
 		baseid=titleid
-	elif str(titleid).endswith('800'):	
+	elif str(titleid).endswith('800'):
 		baseid=titleid[:-3]+'000'
 	else:
 		titleid=str(titleid).lower()
-		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()	
+		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()
 	for region in rglist:
 		f='nutdb_'+region+'.json'
-		regionfile=os.path.join(DATABASE_folder,f)	
+		regionfile=os.path.join(DATABASE_folder,f)
 		check_region_file(region)
-		with open(regionfile) as json_file:	
-			data = json.load(json_file)		
+		with open(regionfile) as json_file:
+			data = json.load(json_file)
 			for i in data:
 				dict=data[i]
 				if 'id' in dict and not region in regions:
 					if str(dict['id']).lower()==titleid:
 						if 'iconUrl' in dict:
-							iconUrl=str(dict['iconUrl'])	
+							iconUrl=str(dict['iconUrl'])
 							if iconUrl=='None' or iconUrl=='':
-								iconUrl=False	
-							else:	
-								return iconUrl	
+								iconUrl=False
+							else:
+								return iconUrl
 	for region in rglist:
 		f='nutdb_'+region+'.json'
-		regionfile=os.path.join(DATABASE_folder,f)	
+		regionfile=os.path.join(DATABASE_folder,f)
 		check_region_file(region)
-		with open(regionfile) as json_file:	
-			data = json.load(json_file)		
+		with open(regionfile) as json_file:
+			data = json.load(json_file)
 			for i in data:
 				dict=data[i]
 				if 'id' in dict and not region in regions:
 					if str(dict['id']).lower()==baseid:
 						if 'iconUrl' in dict:
-							iconUrl=str(dict['iconUrl'])	
+							iconUrl=str(dict['iconUrl'])
 							if iconUrl=='None' or iconUrl=='':
-								iconUrl=False	
-							else:	
-								return iconUrl						
-	return regions	
+								iconUrl=False
+							else:
+								return iconUrl
+	return regions
 
 
 def get_dlcname(titleid,roman=True,format='tabs'):
 	cname=False;basename=False;name=False
-	with open(nutdbfile) as json_file:			
-		data = json.load(json_file)	
+	with open(nutdbfile) as json_file:
+		data = json.load(json_file)
 		titleid=str(titleid).lower()
 		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()
 		for i in data:
@@ -1124,7 +1129,7 @@ def get_dlcname(titleid,roman=True,format='tabs'):
 			for j,k in data[i].items():
 				if str(j) == 'id':
 					if str(k).lower()==titleid:
-						check=True	
+						check=True
 				if str(j) == 'name' and check==True:
 					cname=str(k)
 					break
@@ -1133,53 +1138,53 @@ def get_dlcname(titleid,roman=True,format='tabs'):
 			for j,k in data[i].items():
 				if str(j) == 'id':
 					if str(k).lower()==baseid:
-						check=True	
+						check=True
 				if str(j) == 'name' and check==True:
 					basename=str(k)
-					break	
+					break
 		if basename != False and roman == True:
 			converter = kakashi_conv()
-			basename=converter.do(basename)	
+			basename=converter.do(basename)
 			if basename[0] == ' ':
 				basename=basename[1:]
 			basename=basename[0].upper()+basename[1:]
-			basename=set_roma_uppercases(basename)		
-		else:pass		
+			basename=set_roma_uppercases(basename)
+		else:pass
 		if cname != False and roman == True:
 			converter = kakashi_conv()
-			cname=converter.do(cname)	
+			cname=converter.do(cname)
 			if cname[0] == ' ':
-				basename=basename[1:]			
+				basename=basename[1:]
 			cname=cname[0].upper()+cname[1:]
 			cname=set_roma_uppercases(cname)
-		else:pass						
+		else:pass
 		if cname==False:
 			return False
 		else:
 			if (cname=='None' and basename=='None') or (cname=='None' and basename==False):
 				return False
-			if basename==False or basename=='None':	
+			if basename==False or basename=='None':
 				name=cname
 			elif cname!='None':
 				name=basename+' '+'['+cname+']'
 			else:
 				DLCnumb=str(titleid)
-				DLCnumb="0000000000000"+DLCnumb[-3:]									
+				DLCnumb="0000000000000"+DLCnumb[-3:]
 				DLCnumb=bytes.fromhex(DLCnumb)
-				DLCnumb=str(int.from_bytes(DLCnumb, byteorder='big'))									
-				DLCnumb=int(DLCnumb)	
+				DLCnumb=str(int.from_bytes(DLCnumb, byteorder='big'))
+				DLCnumb=int(DLCnumb)
 				name = basename+' '+'['+str(DLCnumb)+']'
 		if format!='tabs':
 			name=name.replace("[", "- ")
 			name=name.replace("]", "")
-		name=name.replace("\n", "")	
-	return 	name			
-				
+		name=name.replace("\n", "")
+	return 	name
+
 
 def get_dlcData(titleid,roman=True,format='tabs'):
-	cname=False;basename=False;name=False;editor=False		
-	with open(nutdbfile) as json_file:			
-		data = json.load(json_file)		
+	cname=False;basename=False;name=False;editor=False
+	with open(nutdbfile) as json_file:
+		data = json.load(json_file)
 		titleid=str(titleid).lower()
 		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()
 		for i in data:
@@ -1197,66 +1202,66 @@ def get_dlcData(titleid,roman=True,format='tabs'):
 						basename=str(dict['name'])
 					if 'publisher' in dict:
 						editor=str(dict['publisher'])
-					break					
+					break
 		if basename != False and roman == True and basename != 'None':
 			converter = kakashi_conv()
-			basename=converter.do(basename)	
+			basename=converter.do(basename)
 			basename=basename[0].upper()+basename[1:]
-			basename=set_roma_uppercases(basename)		
-		else:pass	
+			basename=set_roma_uppercases(basename)
+		else:pass
 		if editor != False and roman == True and editor != 'None':
 			converter = kakashi_conv()
-			editor=converter.do(editor)	
+			editor=converter.do(editor)
 			editor=editor[0].upper()+editor[1:]
-			editor=set_roma_uppercases(editor)		
-		else:pass			
+			editor=set_roma_uppercases(editor)
+		else:pass
 		if cname != False and roman == True and cname != 'None':
 			converter = kakashi_conv()
-			cname=converter.do(cname)	
+			cname=converter.do(cname)
 			cname=cname[0].upper()+cname[1:]
 			cname=set_roma_uppercases(cname)
-		else:pass						
+		else:pass
 		if cname==False:
 			return False,False
 		else:
 			if (cname=='None' and basename=='None') or (cname=='None' and basename==False):
 				return False,False
-			if basename==False or basename=='None':	
+			if basename==False or basename=='None':
 				name=cname
 			elif cname!='None':
 				name=basename+' '+'['+cname+']'
 			else:
 				DLCnumb=str(titleid)
-				DLCnumb="0000000000000"+DLCnumb[-3:]									
+				DLCnumb="0000000000000"+DLCnumb[-3:]
 				DLCnumb=bytes.fromhex(DLCnumb)
-				DLCnumb=str(int.from_bytes(DLCnumb, byteorder='big'))									
-				DLCnumb=int(DLCnumb)	
+				DLCnumb=str(int.from_bytes(DLCnumb, byteorder='big'))
+				DLCnumb=int(DLCnumb)
 				name = basename+' '+'['+str(DLCnumb)+']'
 		if editor=='None':
 			editor=False
 		if format!='tabs':
 			name=name.replace("[", "- ")
-			name=name.replace("]", "")	
-		name=name.replace("\n", "")				
-	return 	name,editor	
-	
-def get_content_langue(titleid):	
+			name=name.replace("]", "")
+		name=name.replace("\n", "")
+	return 	name,editor
+
+def get_content_langue(titleid):
 	langue=False
 	rglist=['America','Europe','Japan','Asia']
-	titleid=str(titleid).lower()	
+	titleid=str(titleid).lower()
 	if str(titleid).endswith('000'):
 		baseid=titleid
-	elif str(titleid).endswith('800'):	
+	elif str(titleid).endswith('800'):
 		baseid=titleid[:-3]+'000'
 	else:
 		titleid=str(titleid).lower()
-		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()	
+		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()
 	for region in rglist:
 		f='nutdb_'+region+'.json'
-		regionfile=os.path.join(DATABASE_folder,f)	
+		regionfile=os.path.join(DATABASE_folder,f)
 		check_region_file(region)
-		with open(regionfile) as json_file:	
-			data = json.load(json_file)		
+		with open(regionfile) as json_file:
+			data = json.load(json_file)
 			for i in data:
 				dict=data[i]
 				if 'id' in dict:
@@ -1270,12 +1275,12 @@ def get_content_langue(titleid):
 			try:
 				langue=convertlangue(langue,region)
 			except BaseException as e:
-				Print.error('Exception: ' + str(e))	
-				pass	
+				Print.error('Exception: ' + str(e))
+				pass
 			break
 	return langue
-	
-def get_list_match(token,roma=True,show=False,Print=False):	
+
+def get_list_match(token,roma=True,show=False,Print=False):
 	token=token.lower()
 	tokenlist=list();
 	include_tk=list();exclude_tk=list();filter_tk=list()
@@ -1289,58 +1294,58 @@ def get_list_match(token,roma=True,show=False,Print=False):
 				par=v[1:]
 				p_=par.split(":")
 				include_tk.append(p_[0])
-				include_val.append(p_[1])				
+				include_val.append(p_[1])
 			elif v[0]=='-':
 				par=v[1:]
 				p_=par.split(":")
 				exclude_tk.append(p_[0])
-				exclude_val.append(p_[1])					
+				exclude_val.append(p_[1])
 			elif v[0]=='*':
 				par=v[1:]
 				p_=par.split(":")
 				filter_tk.append(p_[0])
-				filter_val.append(p_[1])	
-			else:			
+				filter_val.append(p_[1])
+			else:
 				par=v
 				p_=par.split(":")
 				include_tk.append(p_[0])
-				include_val.append(p_[1])			
-	# print(include_tk)			
+				include_val.append(p_[1])
+	# print(include_tk)
 	# print(include_val)
-	# print(exclude_tk)			
+	# print(exclude_tk)
 	# print(exclude_val)
-	# print(filter_tk)			
-	# print(filter_val)	
+	# print(filter_tk)
+	# print(filter_val)
 	# print(roma)
 	# print(show)
-	# print(Print)	
+	# print(Print)
 
 	matchdict={};
 	rglist=['America','Europe','Japan','Asia']
 	for region in rglist:
 		f='nutdb_'+region+'.json'
-		regionfile=os.path.join(DATABASE_folder,f)	
+		regionfile=os.path.join(DATABASE_folder,f)
 		check_region_file(region)
 		titleid=False;basename=False;version=0
-		with open(regionfile) as json_file:	
-			data = json.load(json_file)		
+		with open(regionfile) as json_file:
+			data = json.load(json_file)
 			for i in data:
 				dict=data[i]
 				if 'id' in dict:
 					titleid=str(dict['id']).upper()
 					if titleid=='NONE':
-						break		
-					else:	
+						break
+					else:
 						baseid=get_baseid(titleid)
 				if titleid !=baseid:
-					basename=get_dlcname(titleid,roman=rome)	
+					basename=get_dlcname(titleid,roman=rome)
 				if 'version' in dict:
 					version=str(dict['version'])
 					if version=='None':
 						version=0
 				if 'name' in dict:
 					contentname=str(dict['name'])
-					if contentname=='None':				
+					if contentname=='None':
 						contentname=''
 					if (contentname != '' or contentname != None) and roma == True:
 						converter = kakashi_conv()
@@ -1350,8 +1355,8 @@ def get_list_match(token,roma=True,show=False,Print=False):
 					langue=dict['languages']
 					langue=ast.literal_eval(str(langue))
 					if isinstance(langue, list):
-						langue=','.join(langue)		
-				ismatch=False						
+						langue=','.join(langue)
+				ismatch=False
 				for j,k in data[i].items():
 					for i in range(len(include_tk)):
 						token=include_tk[i];value=include_val[i]
@@ -1361,36 +1366,36 @@ def get_list_match(token,roma=True,show=False,Print=False):
 								for val in entry:
 									if str(val).lower()==value:
 										ismatch=True
-										match=','.join(entry)											
+										match=','.join(entry)
 							else:
 								entry=str(entry).lower()
 								if value in entry:
 									ismatch=True
 									match=entry
 					if ismatch==True:
-						for i in range(len(exclude_tk)):					
-							token=exclude_tk[i];value=exclude_val[i]		
+						for i in range(len(exclude_tk)):
+							token=exclude_tk[i];value=exclude_val[i]
 							if j.lower()==token:
 								entry=ast.literal_eval(str(k))
 								if isinstance(entry, list):
 									for val in entry:
 										if str(val).lower()==value:
-											ismatch=False	
+											ismatch=False
 					if ismatch==True:
-						for i in range(len(filter_tk)):					
-							token=filter_tk[i];value=filter_val[i]		
+						for i in range(len(filter_tk)):
+							token=filter_tk[i];value=filter_val[i]
 							if j.lower()==token:
 								entry=ast.literal_eval(str(k))
 								if isinstance(entry, list):
 									for val in entry:
 										if str(val).lower()!=value:
-											ismatch=False	
-											
+											ismatch=False
+
 				if 	not titleid in matchdict.keys() and titleid != False and ismatch==True:
 					if basename==False:
 						cname= "{} ({})[{}][v{}].nsp".format(contentname,langue,titleid,version)
 					else:
-						cname= "{} [{}]({})[{}][v{}].nsp".format(contentname,basename,langue,titleid,version)					
+						cname= "{} [{}]({})[{}][v{}].nsp".format(contentname,basename,langue,titleid,version)
 					matchdict[titleid]=cname
 
 	if show==True:
@@ -1398,64 +1403,64 @@ def get_list_match(token,roma=True,show=False,Print=False):
 		for key in matchdict.keys():
 			entry=matchdict[key]
 			showlist.append(entry)
-		showlist.sort()	
-		for entry in showlist:	
+		showlist.sort()
+		for entry in showlist:
 			print(entry)
 	if Print!=False:
 		try:
 			dir=os.path.dirname(os.path.abspath(Print))
 			if not os.path.exists(dir):
-				os.makedirs(dir)	
+				os.makedirs(dir)
 			printlist=list()
 			for key in matchdict.keys():
 				entry=matchdict[key]
 				printlist.append(entry)
-			printlist.sort()	
-			with open(Print,"a", encoding='utf8') as tfile: 
-				for entry in printlist:	
-					tfile.write(entry+'\n')	
+			printlist.sort()
+			with open(Print,"a", encoding='utf8') as tfile:
+				for entry in printlist:
+					tfile.write(entry+'\n')
 		except BaseException as e:
-			Print.error('Exception: ' + str(e))	
-			pass				
+			Print.error('Exception: ' + str(e))
+			pass
 	return 	matchdict
-	
+
 def get_baseid(titleid):
 	if str(titleid).endswith('000'):
 		baseid=titleid
-	elif str(titleid).endswith('800'):	
+	elif str(titleid).endswith('800'):
 		baseid=titleid[:-3]+'000'
 	else:
 		titleid=str(titleid).lower()
 		baseid=get_dlc_baseid(titleid)
-	return baseid.upper()	
-		
-def get_content_data(titleid,trans=True):	
+	return baseid.upper()
+
+def get_content_data(titleid,trans=True):
 	releaseDate=False;nsuId=False;category=False;ratingContent=False;
 	numberOfPlayers=False;iconUrl=False;screenshots=False;bannerUrl=False
 	intro=False;description=False;rating=False;developer=False;
 	productCode=False;OnlinePlay=False;SaveDataCloud=False;playmodes=False;
 	video=False;url=False;
 	rglist=['ninshop','America','Europe','Japan','Asia']
-	titleid=str(titleid).lower()	
+	titleid=str(titleid).lower()
 	if str(titleid).endswith('000'):
 		baseid=titleid
-	elif str(titleid).endswith('800'):	
+	elif str(titleid).endswith('800'):
 		baseid=titleid[:-3]+'000'
 	else:
 		titleid=str(titleid).lower()
-		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()	
+		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()
 	for region in rglist:
 		if region=='ninshop':
 			f=region+'.json'
 		else:
 			f='nutdb_'+region+'.json'
-		regionfile=os.path.join(DATABASE_folder,f)	
+		regionfile=os.path.join(DATABASE_folder,f)
 		if region=='ninshop':
 			check_other_file(urlconfig,region,nutdb=False)
-		else:	
+		else:
 			check_region_file(region,nutdb=True)
-		with open(regionfile) as json_file:	
-			data = json.load(json_file)		
+		with open(regionfile) as json_file:
+			data = json.load(json_file)
 			for i in data:
 				dict=data[i]
 				if 'id' in dict:
@@ -1474,8 +1479,8 @@ def get_content_data(titleid,trans=True):
 						if 'developer' in dict:
 							developer=str(dict['developer'])
 							if developer=='None' or developer=='':
-								developer=False	
-						else:developer=False		
+								developer=False
+						else:developer=False
 						if 'productCode' in dict:
 							productCode=str(dict['productCode'])
 							if productCode=='None' or productCode=='':
@@ -1487,147 +1492,147 @@ def get_content_data(titleid,trans=True):
 							if OnlinePlay==True:
 								OnlinePlay='Yes'
 							elif OnlinePlay==False:
-								OnlinePlay='No'							
+								OnlinePlay='No'
 							if OnlinePlay=='None' or OnlinePlay=='':
 								OnlinePlay=False
 						else:
-							OnlinePlay=False							
+							OnlinePlay=False
 						if 'SaveDataCloud' in dict:
 							SaveDataCloud=str(dict['SaveDataCloud'])
 							if SaveDataCloud==True:
 								SaveDataCloud='Yes'
 							elif SaveDataCloud==False:
-								SaveDataCloud='No'							
+								SaveDataCloud='No'
 							if SaveDataCloud=='None' or SaveDataCloud=='':
 								SaveDataCloud=False
 						else:
-							SaveDataCloud=False								
+							SaveDataCloud=False
 						if 'category' in dict:
 							category=str(dict['category'])
-							try:	
-								x = [x.strip() for x in eval(category)]							
+							try:
+								x = [x.strip() for x in eval(category)]
 								category=x
-							except:pass	
+							except:pass
 							if category=='None' or str((', '.join(category)))=='':
-								category=False		
+								category=False
 							elif region=='Japan' or region=='Asia':
 								converter = kakashi_conv()
 								romalist=list()
-								for item in category:										
-									item=converter.do(item)	
+								for item in category:
+									item=converter.do(item)
 									item=item[0].upper()+item[1:]
 									romalist.append(item)
-								category=romalist	
+								category=romalist
 						if 'ratingContent' in dict:
-							ratingContent=str(dict['ratingContent'])							
-							try:									
-								x = [x.strip() for x in eval(ratingContent)]							
+							ratingContent=str(dict['ratingContent'])
+							try:
+								x = [x.strip() for x in eval(ratingContent)]
 								ratingContent=x
-							except:pass	
+							except:pass
 							if ratingContent=='None' or str((', '.join(ratingContent)))=='':
-								ratingContent=False	
+								ratingContent=False
 							elif region=='Japan' or region=='Asia':
 								converter = kakashi_conv()
 								romalist=list()
-								for item in ratingContent:										
-									item=converter.do(item)	
+								for item in ratingContent:
+									item=converter.do(item)
 									item=item[0].upper()+item[1:]
 									romalist.append(item)
-								ratingContent=romalist	
+								ratingContent=romalist
 						if 'playmodes' in dict:
 							playmodes=str(dict['playmodes'])
-							try:	
-								x = [x.strip() for x in eval(playmodes)]							
+							try:
+								x = [x.strip() for x in eval(playmodes)]
 								playmodes=x
-							except:pass	
+							except:pass
 							if playmodes=='None' or str((', '.join(playmodes)))=='':
-								playmodes=False		
-						else:playmodes=False	
+								playmodes=False
+						else:playmodes=False
 						if 'numberOfPlayers' in dict:
 							numberOfPlayers=str(dict['numberOfPlayers'])
 							if numberOfPlayers=='None' or numberOfPlayers=='':
-								numberOfPlayers=False	
+								numberOfPlayers=False
 						if 'rating' in dict:
 							rating=str(dict['rating'])
 							if rating=='None' or rating=='':
-								rating=False									
+								rating=False
 						if 'iconUrl' in dict:
-							iconUrl=str(dict['iconUrl'])	
+							iconUrl=str(dict['iconUrl'])
 							if iconUrl=='None' or iconUrl=='':
-								iconUrl=False									
+								iconUrl=False
 						if 'video' in dict:
-							video=str(dict['video'])	
+							video=str(dict['video'])
 							if video=='None' or video=='':
-								video=False	
-						else:video=False		
+								video=False
+						else:video=False
 						if 'screenshots' in dict:
-							screenshots=str(dict['screenshots'])	
+							screenshots=str(dict['screenshots'])
 							if screenshots=='None' or screenshots=='':
-								screenshots=False									
+								screenshots=False
 						if 'url' in dict:
 							url=str(dict['url'])
 							if url=='None' or url=='':
 								url=False
-						else:url=False		
+						else:url=False
 						if 'bannerUrl' in dict:
 							bannerUrl=str(dict['bannerUrl'])
 							if bannerUrl=='None' or bannerUrl=='':
-								bannerUrl=False									
+								bannerUrl=False
 						if 'intro' in dict:
 							intro=str(dict['intro'])
 							if intro=='None' or intro=='':
-								intro=False			
-							elif region=='Japan' or region=='Asia':			
+								intro=False
+							elif region=='Japan' or region=='Asia':
 								if trans==False:
-									intro=False	
+									intro=False
 								else:
 									try:
-										# converter = kakashi_conv()							
-										# intro=converter.do(intro)	
-										# intro=intro[0].upper()+intro[1:]												
+										# converter = kakashi_conv()
+										# intro=converter.do(intro)
+										# intro=intro[0].upper()+intro[1:]
 										translator = Translator()
 										if region=='Asia':
-											translation=translator.translate(intro,dest='en')	
+											translation=translator.translate(intro,dest='en')
 										if region=='Japan':
-											translation=translator.translate(intro,src='ja',dest='en')	
-										intro=translation.text								
-									except: pass																		
+											translation=translator.translate(intro,src='ja',dest='en')
+										intro=translation.text
+									except: pass
 						if 'description' in dict:
-							description=str(dict['description'])	
+							description=str(dict['description'])
 							if description=='None' or description=='':
-								description=False		
-							elif region=='Japan' or region=='Asia':		
+								description=False
+							elif region=='Japan' or region=='Asia':
 								if trans==False:
-									description=False	
+									description=False
 								else:
 									try:
-										# converter = kakashi_conv()						
-										# description=converter.do(description)	
-										# description=description[0].upper()+description[1:]												
+										# converter = kakashi_conv()
+										# description=converter.do(description)
+										# description=description[0].upper()+description[1:]
 										translator = Translator()
 										if region=='Asia':
-											translation=translator.translate(description,dest='en')	
+											translation=translator.translate(description,dest='en')
 										if region=='Japan':
-											translation=translator.translate(description,src='ja',dest='en')												
-										description=translation.text								
-									except: pass														
+											translation=translator.translate(description,src='ja',dest='en')
+										description=translation.text
+									except: pass
 						break
 		if nsuId != False or releaseDate != False or category != False:
 			break
 		if 	nsuId == False and releaseDate == False and category == False:
 			region=False
 	return nsuId,releaseDate,category,ratingContent,numberOfPlayers,intro,description,iconUrl,screenshots,bannerUrl,region,rating,developer,productCode,OnlinePlay,SaveDataCloud,playmodes,video,url
-			
+
 def get_dlcnsuId(titleid):
 	nsuId=False
 	rglist=['America','Europe','Japan','Asia']
-	titleid=str(titleid).lower()	
-	for region in rglist:	
+	titleid=str(titleid).lower()
+	for region in rglist:
 		f='nutdb_'+region+'.json'
-		regionfile=os.path.join(DATABASE_folder,f)	
+		regionfile=os.path.join(DATABASE_folder,f)
 		check_region_file(region)
-		with open(regionfile) as json_file:	
-			data = json.load(json_file)		
+		with open(regionfile) as json_file:
+			data = json.load(json_file)
 			for i in data:
 				dict=data[i]
 				if 'id' in dict:
@@ -1637,10 +1642,10 @@ def get_dlcnsuId(titleid):
 						if 'nsuId' in dict:
 							nsuId=str(dict['nsuId'])
 							if nsuId=='None':
-								nsuId=False	
+								nsuId=False
 						break
 		if nsuId != False:
-			break						
+			break
 	return 	nsuId
 
 def convertlangue(langue,region):
@@ -1651,27 +1656,27 @@ def convertlangue(langue,region):
 		if i=='en' and region=='America':
 			SupLg.append("US (eng)")
 		if i=='en' and region=='Europe':
-			SupLg.append("UK (eng)")				
+			SupLg.append("UK (eng)")
 		if i=='ja':
-			SupLg.append("JP")				
+			SupLg.append("JP")
 		if i=='fr':
-			SupLg.append("FR")				
+			SupLg.append("FR")
 		if i=='de':
-			SupLg.append("DE")						
+			SupLg.append("DE")
 		if i=='es':
-			SupLg.append("SPA")				
+			SupLg.append("SPA")
 		if i=='it':
-			SupLg.append("IT")						
+			SupLg.append("IT")
 		if i=='nl':
-			SupLg.append("DU")									
+			SupLg.append("DU")
 		if i=='pt':
-			SupLg.append("POR")						
+			SupLg.append("POR")
 		if i=='ru':
-			SupLg.append("RU")						
+			SupLg.append("RU")
 		if i=='ko':
-			SupLg.append("KOR")				
+			SupLg.append("KOR")
 		if i=='zh':
-			SupLg.append("CH")	
+			SupLg.append("CH")
 	return SupLg
 
 
@@ -1680,25 +1685,25 @@ def get_dlc_baseid(titleid):
 	token=int(hx(bytes.fromhex('0'+baseid[-4:-3])),16)-int('1',16)
 	token=str(hex(token))[-1]
 	token=token.upper()
-	baseid=baseid[:-4]+token+'000'	
+	baseid=baseid[:-4]+token+'000'
 	return baseid
 
 
-def get_content_cheats(titleid,version=False,buildId=False):	
+def get_content_cheats(titleid,version=False,buildId=False):
 	cheatID_list=list();
-	titleid=str(titleid).lower()	
+	titleid=str(titleid).lower()
 	if str(titleid).endswith('000'):
 		baseid=titleid
-	elif str(titleid).endswith('800'):	
+	elif str(titleid).endswith('800'):
 		baseid=titleid[:-3]+'000'
 	else:
 		titleid=str(titleid).lower()
-		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()	
+		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()
 	f='nutdb_'+'cheats'+'.json'
-	_dbfile_=os.path.join(DATABASE_folder,f)	
+	_dbfile_=os.path.join(DATABASE_folder,f)
 	check_other_file(urlconfig,'cheats')
-	with open(_dbfile_) as json_file:	
-		data = json.load(json_file)		
+	with open(_dbfile_) as json_file:
+		data = json.load(json_file)
 		for i in data:
 			if i.lower()==baseid.lower():
 				dict=data[i]
@@ -1720,48 +1725,48 @@ def get_content_cheats(titleid,version=False,buildId=False):
 									# print("Title: "+datalv3['title'])
 								if 'source' in datalv3:
 									cheat_source=datalv3['source']
-									# print(datalv3['source'])	
+									# print(datalv3['source'])
 									if not 'title' in datalv3:
 										cheat_title=''
 									cheats.append([cheat_title,cheat_source])
-						cheatID_list.append([titleid,version,BuildID,cheats])			
+						cheatID_list.append([titleid,version,BuildID,cheats])
 				break
 	return cheatID_list
-	
-def BaseID_tree(titleid,printinfo=True):	
+
+def BaseID_tree(titleid,printinfo=True):
 	feed=''
-	titleid=str(titleid).lower()	
+	titleid=str(titleid).lower()
 	if str(titleid).endswith('000'):
 		baseid=titleid
-	elif str(titleid).endswith('800'):	
+	elif str(titleid).endswith('800'):
 		baseid=titleid[:-3]+'000'
 	else:
 		titleid=str(titleid).lower()
-		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()		
+		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()
 	f='nutdb_'+'versions'+'.txt'
-	_dbfile_=os.path.join(DATABASE_folder,f)	
+	_dbfile_=os.path.join(DATABASE_folder,f)
 	check_other_file(urlconfig,'versions_txt')
 	baselist=list();updlist=list();dlclist=list()
 	with open(_dbfile_,'rt',encoding='utf8') as csvfile:
-		readCSV = csv.reader(csvfile, delimiter='|')	
-		i=0	
+		readCSV = csv.reader(csvfile, delimiter='|')
+		i=0
 		for row in readCSV:
 			if i==0:
 				csvheader=row
 				i=1
 				if 'id' and 'version' in csvheader:
 					id=csvheader.index('id')
-					ver=csvheader.index('version')	
-				else:break	
-			else:	
-				tid=str(row[id]).lower() 
+					ver=csvheader.index('version')
+				else:break
+			else:
+				tid=str(row[id]).lower()
 				if str(tid).endswith('000'):
 					bid=tid
-				elif str(tid).endswith('800'):	
+				elif str(tid).endswith('800'):
 					bid=tid[:-3]+'000'
 				else:
 					tid=tid.lower()
-					bid=get_dlc_baseid(tid);bid=bid.lower()				
+					bid=get_dlc_baseid(tid);bid=bid.lower()
 				if baseid==bid:
 					v_=str(row[ver])
 					if v_=='':
@@ -1773,27 +1778,27 @@ def BaseID_tree(titleid,printinfo=True):
 					elif tid.endswith('800'):
 						updlist.append([tid,v_])
 						if printinfo==True:
-							message=('Update: '+tid.upper()+' v'+str(v_));print(message);feed+=message+'\n'		
+							message=('Update: '+tid.upper()+' v'+str(v_));print(message);feed+=message+'\n'
 					else:
 						dlclist.append([tid,v_])
 						if printinfo==True:
 							message=('DLC:    '+tid.upper()+' v'+str(v_));print(message);feed+=message+'\n'
 				else:pass
-	return feed,baselist,updlist,dlclist			
+	return feed,baselist,updlist,dlclist
 
-def checkfolder(ofolder,roman=True,printinfo=True):	
+def checkfolder(ofolder,roman=True,printinfo=True):
 	today = date.today()
 	today=int(today.strftime("%Y%m%d"))
 	# print(str(today))
 	feed=''
 	rglist=['America','Europe','Japan','Asia']
-	
+
 	filelist=listmanager.folder_to_list(ofolder,extlist=['nsp','nsz','xci','xcz'])
-  
+
 	# for f in filelist:
 		# print(f)
 	test2="";test=""
-	Datashelve = dbmodule.Dict('File01.dshlv');c=0		
+	Datashelve = dbmodule.Dict('File01.dshlv');c=0
 	for filepath in filelist:
 		try:
 			fileid,fileversion,cctag,nG,nU,nD,baseid=listmanager.parsetags(filepath)
@@ -1801,77 +1806,77 @@ def checkfolder(ofolder,roman=True,printinfo=True):
 			if c==0:
 				c+=1
 				try:
-					Datashelve[str(fileid)]=[filepath,fileid,fileversion,cctag,nG,nU,nD,baseid]				
+					Datashelve[str(fileid)]=[filepath,fileid,fileversion,cctag,nG,nU,nD,baseid]
 				except BaseException as e:
-					Print.error('Exception: ' + str(e))							
+					Print.error('Exception: ' + str(e))
 			else:
 				try:
 					if str(fileid) in Datashelve:
 						shelvedfile=Datashelve[str(fileid)]
 						#print(shelvedfile[2])
 						if shelvedfile[1]==fileid:
-							if int(shelvedfile[2])>int(fileversion):							
-								Datashelve[str(fileid)]=shelvedfile								
-							elif int(shelvedfile[2])== int(fileversion):								
-								Datashelve[str(fileid)]=shelvedfile	
-							else:										
-								Datashelve[str(fileid)]=[filepath,fileid,fileversion,cctag,nG,nU,nD,baseid]									
-						else:		
-							pass	
+							if int(shelvedfile[2])>int(fileversion):
+								Datashelve[str(fileid)]=shelvedfile
+							elif int(shelvedfile[2])== int(fileversion):
+								Datashelve[str(fileid)]=shelvedfile
+							else:
+								Datashelve[str(fileid)]=[filepath,fileid,fileversion,cctag,nG,nU,nD,baseid]
+						else:
+							pass
 					else:
-						Datashelve[str(fileid)]=[filepath,fileid,fileversion,cctag,nG,nU,nD,baseid]						
+						Datashelve[str(fileid)]=[filepath,fileid,fileversion,cctag,nG,nU,nD,baseid]
 				except BaseException as e:
-					Print.error('Exception: ' + str(e))		
-		except:pass			
-	del filelist	
+					Print.error('Exception: ' + str(e))
+		except:pass
+	del filelist
 
 	f='nutdb_'+'versions'+'.txt'
-	_dbfile_=os.path.join(DATABASE_folder,f)	
+	_dbfile_=os.path.join(DATABASE_folder,f)
 	check_other_file(urlconfig,'versions_txt')
 	missID=list()
 	with open(_dbfile_,'rt',encoding='utf8') as csvfile:
-		readCSV = csv.reader(csvfile, delimiter='|')	
-		i=0	
+		readCSV = csv.reader(csvfile, delimiter='|')
+		i=0
 		for row in readCSV:
 			if i==0:
 				csvheader=row
 				i=1
 				if 'id' and 'version' in csvheader:
 					id=csvheader.index('id')
-					ver=csvheader.index('version')	
-				else:break	
-			else:	
-				tid=str(row[id]).upper() 
+					ver=csvheader.index('version')
+				else:break
+			else:
+				tid=str(row[id]).upper()
 				if not tid in Datashelve.keys() and tid.endswith('000'):
 					# print(tid)
 					missID.append(tid)
 				# if updid==tid:
-					# v_=str(row[ver])				
-					# return ('v'+str(v_))						
+					# v_=str(row[ver])
+					# return ('v'+str(v_))
 	counter=len(missID);c=0
 	namedfiles=list();excludefiles=list()
-	with open(nutdbfile) as json_file:	
-		data = json.load(json_file)		
+	with open(nutdbfile) as json_file:
+		data = json.load(json_file)
 		for i in data:
 			if c >= counter:
 				break
-			try:	
+			try:
 				check=False
 				region='unknown'
 				for j,k in data[i].items():
 					if str(j) == 'id':
 						if str(k).upper() in missID and not str(k).upper() in namedfiles:
 							id=str(k).upper()
-							check=True	
+							check=True
 					if str(j) == 'name' and check==True:
 						cname=str(k)
 						if roman == True:
 							converter = kakashi_conv()
-							cname=converter.do(cname)	
+							cname=converter.do(cname)
 							if cname[0] == ' ':
-								basename=basename[1:]			
+								basename=basename[1:]
 							cname=cname[0].upper()+cname[1:]
-							cname=set_roma_uppercases(cname)		
+							cname=set_roma_uppercases(cname)
 							if cname=='None':
 								cname=''
 					if str(j) == 'region' :
@@ -1879,16 +1884,16 @@ def checkfolder(ofolder,roman=True,printinfo=True):
 					if str(j) == 'releaseDate' and check==True:
 						rdate=int(k)
 						if rdate<today:
-							b=str(rdate)						
+							b=str(rdate)
 							releaseDate=b[6:]+'/'+b[4:6]+'/'+b[:4]
-							print('{}|{}|{}[{}][v{}]'.format(releaseDate,region,cname,id,'0'))						
-							c+=1	
+							print('{}|{}|{}[{}][v{}]'.format(releaseDate,region,cname,id,'0'))
+							c+=1
 							namedfiles.append(id)
 							break
 						else:
 							excludefiles.append(id)
-							c+=1						
-							break				
+							c+=1
+							break
 			except:
 				c+=1
 				pass
@@ -1896,24 +1901,24 @@ def checkfolder(ofolder,roman=True,printinfo=True):
 		if x not in namedfiles and x not in excludefiles:
 			print('[{}][v{}]'.format(x,'0'))
 
-	Datashelve.close()		
+	Datashelve.close()
 	try:os.remove('File01.dshlv')
-	except:pass			
-	
-def checkfolder_updates(ofolder,roman=True,printinfo=True):	
+	except:pass
+
+def checkfolder_updates(ofolder,roman=True,printinfo=True):
 	today = date.today()
 	today=int(today.strftime("%Y%m%d"))
 	# print(str(today))
 	feed=''
 	rglist=['America','Europe','Japan','Asia']
-	
+
 
 	filelist=listmanager.folder_to_list(ofolder,extlist=['nsp','nsz','xci','xcz'])
 
 	# for f in filelist:
 		# print(f)
 	test2="";test=""
-	Datashelve = dbmodule.Dict('File01.dshlv');c=0		
+	Datashelve = dbmodule.Dict('File01.dshlv');c=0
 	for filepath in filelist:
 		try:
 			fileid,fileversion,cctag,nG,nU,nD,baseid=listmanager.parsetags(filepath)
@@ -1921,50 +1926,50 @@ def checkfolder_updates(ofolder,roman=True,printinfo=True):
 			if c==0:
 				c+=1
 				try:
-					Datashelve[str(fileid)]=[filepath,fileid,fileversion,cctag,nG,nU,nD,baseid]				
+					Datashelve[str(fileid)]=[filepath,fileid,fileversion,cctag,nG,nU,nD,baseid]
 				except BaseException as e:
-					Print.error('Exception: ' + str(e))							
+					Print.error('Exception: ' + str(e))
 			else:
 				try:
 					if str(fileid) in Datashelve:
 						shelvedfile=Datashelve[str(fileid)]
 						#print(shelvedfile[2])
 						if shelvedfile[1]==fileid:
-							if int(shelvedfile[2])>int(fileversion):							
-								Datashelve[str(fileid)]=shelvedfile								
-							elif int(shelvedfile[2])== int(fileversion):								
-								Datashelve[str(fileid)]=shelvedfile	
-							else:										
-								Datashelve[str(fileid)]=[filepath,fileid,fileversion,cctag,nG,nU,nD,baseid]									
-						else:		
-							pass	
+							if int(shelvedfile[2])>int(fileversion):
+								Datashelve[str(fileid)]=shelvedfile
+							elif int(shelvedfile[2])== int(fileversion):
+								Datashelve[str(fileid)]=shelvedfile
+							else:
+								Datashelve[str(fileid)]=[filepath,fileid,fileversion,cctag,nG,nU,nD,baseid]
+						else:
+							pass
 					else:
-						Datashelve[str(fileid)]=[filepath,fileid,fileversion,cctag,nG,nU,nD,baseid]						
+						Datashelve[str(fileid)]=[filepath,fileid,fileversion,cctag,nG,nU,nD,baseid]
 				except BaseException as e:
-					Print.error('Exception: ' + str(e))		
-		except:pass			
-	del filelist	
+					Print.error('Exception: ' + str(e))
+		except:pass
+	del filelist
 
 	# print(Datashelve.keys())
 
 	f='nutdb_'+'versions'+'.txt'
-	_dbfile_=os.path.join(DATABASE_folder,f)	
+	_dbfile_=os.path.join(DATABASE_folder,f)
 	check_other_file(urlconfig,'versions_txt')
 	missID=list()
 	with open(_dbfile_,'rt',encoding='utf8') as csvfile:
-		readCSV = csv.reader(csvfile, delimiter='|')	
-		i=0	
+		readCSV = csv.reader(csvfile, delimiter='|')
+		i=0
 		for row in readCSV:
 			if i==0:
 				csvheader=row
 				i=1
 				if 'id' and 'version' in csvheader:
 					id=csvheader.index('id')
-					ver=csvheader.index('version')	
-				else:break	
-			else:	
+					ver=csvheader.index('version')
+				else:break
+			else:
 				try:
-					tid=str(row[id]).upper() 
+					tid=str(row[id]).upper()
 					if tid.endswith('800'):
 						btid=tid[:-3]+'000'
 					else:
@@ -1979,9 +1984,9 @@ def checkfolder_updates(ofolder,roman=True,printinfo=True):
 						# print(v_)
 						# print(data[2])
 						# print('..')
-						if int(v_)>int(data[2]):		
+						if int(v_)>int(data[2]):
 
-							missID.append([tid,v_])				
+							missID.append([tid,v_])
 
 				except:pass
 	# print(missID)
@@ -1989,40 +1994,40 @@ def checkfolder_updates(ofolder,roman=True,printinfo=True):
 		print('[{}][v{}]'.format(t,v))
 	# counter=len(missID);c=0
 	# namedfiles=list();excludefiles=list()
-	# with open(nutdbfile) as json_file:	
-		# data = json.load(json_file)		
+	# with open(nutdbfile) as json_file:
+		# data = json.load(json_file)
 		# for i in data:
 			# if c >= counter:
 				# break
-			# try:	
+			# try:
 				# check=False
 				# for j,k in data[i].items():
 					# if str(j) == 'id':
 						# if str(k).upper() in missID and not str(k).upper() in namedfiles:
 							# id=str(k).upper()
-							# check=True	
+							# check=True
 					# if str(j) == 'name' and check==True:
 						# cname=str(k)
 						# if roman == True:
 							# converter = kakashi_conv()
-							# cname=converter.do(cname)	
+							# cname=converter.do(cname)
 							# if cname[0] == ' ':
-								# basename=basename[1:]			
+								# basename=basename[1:]
 							# cname=cname[0].upper()+cname[1:]
-							# cname=set_roma_uppercases(cname)		
+							# cname=set_roma_uppercases(cname)
 							# if cname=='None':
 								# cname=''
 					# if str(j) == 'releaseDate' and check==True:
 						# rdate=int(k)
 						# if rdate<today:
 							# print('{}[{}][v{}]'.format(cname,id,'0'))
-							# c+=1	
+							# c+=1
 							# namedfiles.append(id)
 							# break
 						# else:
 							# excludefiles.append(id)
-							# c+=1						
-							# break				
+							# c+=1
+							# break
 			# except:
 				# c+=1
 				# pass
@@ -2030,34 +2035,34 @@ def checkfolder_updates(ofolder,roman=True,printinfo=True):
 		# if x not in namedfiles and x not in excludefiles:
 			# print('[{}][v{}]'.format(x,'0'))
 
-	Datashelve.close()		
+	Datashelve.close()
 	try:os.remove('File01.dshlv')
-	except:pass			
+	except:pass
 
-def getupcoming(roman=True,printinfo=True):	
+def getupcoming(roman=True,printinfo=True):
 	today = date.today()
 	today=int(today.strftime("%Y%m%d"))
 	# print(str(today))
 	namedfiles=list();
-	with open(nutdbfile) as json_file:	
-		data = json.load(json_file)		
+	with open(nutdbfile) as json_file:
+		data = json.load(json_file)
 		for i in data:
-			try:	
+			try:
 				check=False
 				for j,k in data[i].items():
 					if str(j) == 'id':
 						if str(k).upper() not in namedfiles:
 							id=str(k).upper()
-							check=True	
+							check=True
 					if str(j) == 'name' and check==True:
 						cname=str(k)
 						if roman == True:
 							converter = kakashi_conv()
-							cname=converter.do(cname)	
+							cname=converter.do(cname)
 							if cname[0] == ' ':
-								basename=basename[1:]			
+								basename=basename[1:]
 							cname=cname[0].upper()+cname[1:]
-							cname=set_roma_uppercases(cname)		
+							cname=set_roma_uppercases(cname)
 							if cname=='None':
 								cname=''
 					if str(j) == 'releaseDate' and check==True:
@@ -2068,84 +2073,84 @@ def getupcoming(roman=True,printinfo=True):
 							print('{}: {}[{}][v{}]'.format(releaseDate,cname,id,'0'))
 							namedfiles.append(id)
 							break
-						else:				
-							break				
+						else:
+							break
 			except:
 				pass
 
-def latest_upd(titleid):	
-	titleid=str(titleid).lower()	
+def latest_upd(titleid):
+	titleid=str(titleid).lower()
 	if str(titleid).endswith('000'):
 		baseid=titleid[:-3]+'000'
-	elif str(titleid).endswith('800'):	
+	elif str(titleid).endswith('800'):
 		baseid=titleid[:-3]+'000'
 	else:
 		titleid=str(titleid).lower()
 		baseid=get_dlc_baseid(titleid);baseid=baseid.lower()
 	updid=baseid[:-3]+'800'
 	f='nutdb_'+'versions'+'.txt'
-	_dbfile_=os.path.join(DATABASE_folder,f)	
+	_dbfile_=os.path.join(DATABASE_folder,f)
 	check_other_file(urlconfig,'versions_txt')
 	feed=list()
 	with open(_dbfile_,'rt',encoding='utf8') as csvfile:
-		readCSV = csv.reader(csvfile, delimiter='|')	
-		i=0	
+		readCSV = csv.reader(csvfile, delimiter='|')
+		i=0
 		for row in readCSV:
 			if i==0:
 				csvheader=row
 				i=1
 				if 'id' and 'version' in csvheader:
 					id=csvheader.index('id')
-					ver=csvheader.index('version')	
-				else:break	
-			else:	
-				tid=str(row[id]).lower() 		
+					ver=csvheader.index('version')
+				else:break
+			else:
+				tid=str(row[id]).lower()
 				if updid==tid:
-					v_=str(row[ver])				
+					v_=str(row[ver])
 					return ('v'+str(v_))
 
-def latest_ver(titleid):	
-	titleid=str(titleid).lower()	
+def latest_ver(titleid):
+	titleid=str(titleid).lower()
 	f='nutdb_'+'versions'+'.txt'
-	_dbfile_=os.path.join(DATABASE_folder,f)	
+	_dbfile_=os.path.join(DATABASE_folder,f)
 	check_other_file(urlconfig,'versions_txt')
 	feed=list()
 	with open(_dbfile_,'rt',encoding='utf8') as csvfile:
-		readCSV = csv.reader(csvfile, delimiter='|')	
-		i=0	
+		readCSV = csv.reader(csvfile, delimiter='|')
+		i=0
 		for row in readCSV:
 			if i==0:
 				csvheader=row
 				i=1
 				if 'id' and 'version' in csvheader:
 					id=csvheader.index('id')
-					ver=csvheader.index('version')	
-				else:break	
-			else:	
-				tid=str(row[id]).lower() 		
+					ver=csvheader.index('version')
+				else:break
+			else:
+				tid=str(row[id]).lower()
 				if titleid==tid:
-					v_=str(row[ver])				
-					return ('v'+str(v_))					
+					v_=str(row[ver])
+					return ('v'+str(v_))
 
 def set_roma_uppercases(input):
 	if '(' in str(input):
-		input = input.replace("( ", "(");input = input.replace(" )", ")")	
+		input = input.replace("( ", "(");input = input.replace(" )", ")")
 		tid1=list()
 		tid2=list()
 		tid1=[pos for pos, char in enumerate(input) if char == '(']
 		tid2=[pos for pos, char in enumerate(input) if char == ')']
 		if len(tid1)>=len(tid2):
-			lentlist=len(tid1)					
+			lentlist=len(tid1)
 		elif len(tid1)<len(tid2):
-			lentlist=len(tid2)				
-		for i in range(lentlist):	
+			lentlist=len(tid2)
+		for i in range(lentlist):
 			try:
 				i1=tid1[i]
-				i2=tid2[i]+1					
+				i2=tid2[i]+1
 				t=input[i1:i2]
 				t=t[0]+t[1].upper()+t[2:]
 				input=input[:i1]+t+input[i2:]
-			except:pass		
+			except:pass
 	elif '[' in str(input):
 		input = input.replace("[", "(");input = input.replace("]", ")")
 		tid1=list()
@@ -2153,17 +2158,17 @@ def set_roma_uppercases(input):
 		tid1=[pos for pos, char in enumerate(input) if char == '(']
 		tid2=[pos for pos, char in enumerate(input) if char == ')']
 		if len(tid1)>=len(tid2):
-			lentlist=len(tid1)					
+			lentlist=len(tid1)
 		elif len(tid1)<len(tid2):
-			lentlist=len(tid2)				
-		for i in range(lentlist):	
+			lentlist=len(tid2)
+		for i in range(lentlist):
 			try:
 				i1=tid1[i]
-				i2=tid2[i]+1					
+				i2=tid2[i]+1
 				t=input[i1:i2]
 				t=t[0]+t[1].upper()+t[2:]
 				input=input[:i1]+t+input[i2:]
-			except:pass		
+			except:pass
 	else:
 		pass
 	return 	input
@@ -2177,21 +2182,21 @@ def kakashi_conv():
 	kakasi.setMode("E", "a")
 	kakasi.setMode("a", None)
 	kakasi.setMode("C", False)
-	converter = kakasi.getConverter()	
+	converter = kakasi.getConverter()
 	return converter
-	
+
 def check_files():
-	# check_current()	
+	# check_current()
 	rglist=['ninshop','America','Europe','Japan','Asia']
 	for region in rglist:
 		if region=='ninshop':
 			check_other_file(urlconfig,region,nutdb=False)
-		else:	
-			check_region_file(region,nutdb=True)	
+		else:
+			check_region_file(region,nutdb=True)
 	check_other_file(urlconfig,'metacritic_id',nutdb=False)
-	check_other_file(urlconfig,'fw',nutdb=False)	
+	check_other_file(urlconfig,'fw',nutdb=False)
 	check_other_file(urlconfig,'versions_txt')
-	check_other_file(urlconfig,'versions')		
-	check_other_file(urlconfig,'HC_VLIST')	
+	check_other_file(urlconfig,'versions')
+	check_other_file(urlconfig,'HC_VLIST')
 	check_other_file(urlconfig,'cheats')
-	consolidate_versiondb()	
+	consolidate_versiondb()

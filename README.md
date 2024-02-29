@@ -1,45 +1,58 @@
-# autoverif 
+# AutoVerify
+Original work by @themoonisacheese.
+
 Auto verify NSP, NSZ, XCI, XCZ to check if they have a valid hash and signature, on Linux and Windows.
 
 Verification code stolen from NSCB, with mods from @seiya-git.
 This is essentially a stripped down squirrel.py that does only verification, meant for batch processing of stashes.
 
+This fork is to be an enhanced version - with minor cleanups on touched files and features added while being open to the community to contribute as they see fit.
+
+
 # Usage
 
 ```
-  -h, --help            show help message and exit
+usage: autoverify.py [-h] [-c CONTRIB_PATH] [-s STASH_PATH] [-w WEBHOOK_URL] [-t] [-l LOG_FAILURES] [-k KEEP_FILES] [-r RECURSE_DIRECTORIES]
+
+options:
+  -h, --help            show this help message and exit
   -c CONTRIB_PATH, --contrib-path CONTRIB_PATH
-                        input folder (valid games are moved from here)
+                        input folder (games) (default: None)
   -s STASH_PATH, --stash-path STASH_PATH
-                        output folder (verified games)
+                        output folder (valid games are moved here) (default: None)
   -w WEBHOOK_URL, --webhook-url WEBHOOK_URL
-                        discord webhook url
-  -t, --check-stash     check for games with invalid format
+                        discord webhook url (default: None)
+  -t, --check-stash     check for games with invalid format (default: False)
+  -l LOG_FAILURES, --log-failures LOG_FAILURES
+                        Filepath to save the name of failed validations (default: None)
+  -k KEEP_FILES, --keep-files KEEP_FILES
+                        Keep files instead of deleting them (default: None)
+  -r RECURSE_DIRECTORIES, --recurse-directories RECURSE_DIRECTORIES
+                        Scan for files in directory and all sub directories recursively (default: None)
 ```
-# Install
-clone this repo, then:
-
-```
-cd autoverif
-python3 -m venv .venv
-
-#Windows:
-.venv\Scripts\activate.bat
-#Linux:
-source .venv/bin/activate
-
-pip3 install -r requirements.txt
-```
+# Installation
+1) clone this repo
+2) cd into new "autoverify" directory
+3) run "python -m venv venv" [without quotes]
+4) Activate the new venv by running the following in a terminal/command window:
+  a) Windows: .venv\Scripts\activate.bat
+  b) Linux:   source .venv/bin/activate
+5) Install requirements by running the following command in the same window from step 4: "pip install -r requirements" [without quotes]
+6) Place a copy of your (legally acquired) prod.keys in the same directory as autoverify.py, and then rename "prod.keys" to "keys.txt" [again, without quotes]
+7) When using the program, ensure to open a command window and activate the venv following the instructions in step 4, or using the "python" executable found in the venv's folder itself.
 
 # Examples
 ```
-python3 autoverify.py -c /path/to/unverified/games -s /path/to/stash
+1) Check games in "/path/to/unverified/games" and move all valid ones to the target directory "/path/to/stash"
+  * python autoverify.py -c /path/to/unverified/games -s /path/to/stash
+
+2) Same as example one, but scan all subfolders found in "/path/to/unverified/games". NOTE: Output will be flattend in destination
+  * python autoverify.py -c /path/to/unverified/games -s /path/to/stash -r
+
+3) Same as example two, but keep the invalid files instead of deleting them
+  * python autoverify.py -c /path/to/unverified/games -s /path/to/stash -r -k
 ```
 
-/path/to/unverified/games must contain folders named "Base", "UPD", and "DLC" (case sensitive). Only files in these folders will be checked.
+If the stash (destination) folder does not exist, it will attempt to be created.
 
-If the folders in the contrib or stash directory do not exist, they will be created.
-
-Files that pass the signature verification will be moved to their corresponding folder in the stash directory (ie, Base to Base, etc. Only the source folder is actually considered, not whether the file really is a Base nsp).
-
-Files that do not pass the signature verification will be **PERMANENTLY DELETED** (they don't validate anyway why do you have them?). This may or may not include random non-verifiable files (eg: text files, photos of your cat, your hard drive's partition table) that happen to be there.
+Files that do not pass the signature verification will be **PERMANENTLY DELETED** unless the -k or --keep-files flag is passed. Due to the logic in retrieving the files list it *should" only target Switch ROM files (".nsp", ".nsz", ".xci", ".xcz"), but discretion is advised.
